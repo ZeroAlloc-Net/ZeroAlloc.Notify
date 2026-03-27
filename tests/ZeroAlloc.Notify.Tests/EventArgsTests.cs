@@ -7,14 +7,14 @@ public class EventArgsTests
     [Fact]
     public void AsyncPropertyChangedEventArgs_StoresPropertyName()
     {
-        var args = new AsyncPropertyChangedEventArgs("Name");
+        var args = new AsyncPropertyChangedEventArgs("Name", null, null);
         Assert.Equal("Name", args.PropertyName);
     }
 
     [Fact]
     public void AsyncPropertyChangingEventArgs_StoresPropertyName()
     {
-        var args = new AsyncPropertyChangingEventArgs("Name");
+        var args = new AsyncPropertyChangingEventArgs("Name", null, null);
         Assert.Equal("Name", args.PropertyName);
     }
 

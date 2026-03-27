@@ -59,15 +59,15 @@ internal static class NotifyWriter
             WriteEventMember(sb, mode,
                 "global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs",
                 "_propertyChangedAsync", "PropertyChangedAsync",
-                "    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangedAsync(string propertyName, global::System.Threading.CancellationToken ct = default)",
-                "        => _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(propertyName), ct);");
+                "    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangedAsync(string propertyName, object? oldValue, object? newValue, global::System.Threading.CancellationToken ct = default)",
+                "        => _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(propertyName, oldValue, newValue), ct);");
 
         if (model.NotifyPropertyChanging)
             WriteEventMember(sb, mode,
                 "global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs",
                 "_propertyChangingAsync", "PropertyChangingAsync",
-                "    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangingAsync(string propertyName, global::System.Threading.CancellationToken ct = default)",
-                "        => _propertyChangingAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(propertyName), ct);");
+                "    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangingAsync(string propertyName, object? oldValue, object? newValue, global::System.Threading.CancellationToken ct = default)",
+                "        => _propertyChangingAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(propertyName, oldValue, newValue), ct);");
 
         if (model.NotifyCollectionChanged)
             WriteEventMember(sb, mode,
@@ -125,20 +125,21 @@ internal static class NotifyWriter
         sb.AppendLine($"    public async global::System.Threading.Tasks.ValueTask Set{field.PropertyName}Async({field.TypeName} value, global::System.Threading.CancellationToken ct = default)");
         sb.AppendLine("    {");
         sb.AppendLine($"        if (global::System.Collections.Generic.EqualityComparer<{field.TypeName}>.Default.Equals({field.FieldName}, value)) return;");
+        sb.AppendLine($"        var __old = {field.FieldName};");
         if (model.NotifyPropertyChanging)
         {
             if (field.Sequential && !model.ClassLevelSequential)
-                sb.AppendLine($"        await _propertyChangingAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(nameof({field.PropertyName})), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);");
+                sb.AppendLine($"        await _propertyChangingAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(nameof({field.PropertyName}), __old, value), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);");
             else
-                sb.AppendLine($"        await RaisePropertyChangingAsync(nameof({field.PropertyName}), ct).ConfigureAwait(false);");
+                sb.AppendLine($"        await RaisePropertyChangingAsync(nameof({field.PropertyName}), __old, value, ct).ConfigureAwait(false);");
         }
         sb.AppendLine($"        {field.FieldName} = value;");
         if (model.NotifyPropertyChanged)
         {
             if (field.Sequential && !model.ClassLevelSequential)
-                sb.AppendLine($"        await _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(nameof({field.PropertyName})), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);");
+                sb.AppendLine($"        await _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(nameof({field.PropertyName}), __old, value), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);");
             else
-                sb.AppendLine($"        await RaisePropertyChangedAsync(nameof({field.PropertyName}), ct).ConfigureAwait(false);");
+                sb.AppendLine($"        await RaisePropertyChangedAsync(nameof({field.PropertyName}), __old, value, ct).ConfigureAwait(false);");
         }
         sb.AppendLine("    }");
         sb.AppendLine();

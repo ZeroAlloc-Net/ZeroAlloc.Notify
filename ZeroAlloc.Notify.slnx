@@ -6,4 +6,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/ZeroAlloc.Notify.Tests/ZeroAlloc.Notify.Tests.csproj" />
   </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/Notify.Benchmarks/Notify.Benchmarks.csproj" />
+  </Folder>
 </Solution>

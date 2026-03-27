@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ZeroAlloc.Notify.Generator/ZeroAlloc.Notify.Generator.csproj" />
+    <Project Path="src/ZeroAlloc.Notify/ZeroAlloc.Notify.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ZeroAlloc.Notify.Tests/ZeroAlloc.Notify.Tests.csproj" />
+  </Folder>
+</Solution>

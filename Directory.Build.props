@@ -1,0 +1,36 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Authors>Marcel Roozekrans</Authors>
+    <Company>Marcel Roozekrans</Company>
+    <Copyright>Copyright (c) Marcel Roozekrans</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://notify.zeroalloc.net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>notify;inotifypropertychanged;async;sourcegenerator;mvvm;zeroalloc;performance</PackageTags>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IsPackable)' != 'false'">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Condition="Exists('$(MSBuildThisFileDirectory)README.md')" />
+    <None Include="$(MSBuildThisFileDirectory)assets\icon.png" Pack="true" PackagePath="\" Condition="Exists('$(MSBuildThisFileDirectory)assets\icon.png')" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer" Version="3.0.23" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Roslynator.Analyzers" Version="4.15.0" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="ErrorProne.NET.CoreAnalyzers" Version="0.1.2" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="ZeroAlloc.Analyzers" Version="1.3.1" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

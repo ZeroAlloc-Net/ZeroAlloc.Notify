@@ -26,6 +26,7 @@ internal static class NotifyWriter
         sb.AppendLine("using System.Threading;");
         sb.AppendLine("using System.Threading.Tasks;");
         sb.AppendLine("using ZeroAlloc.AsyncEvents;");
+        sb.AppendLine("using ZeroAlloc.Notify;");
         sb.AppendLine();
 
         if (model.Namespace is not null)
@@ -38,10 +39,10 @@ internal static class NotifyWriter
     private static void WriteClassOpen(StringBuilder sb, NotifyClassModel model)
     {
         var interfaces = new List<string>();
-        if (model.NotifyPropertyChanged)   interfaces.Add("global::ZeroAlloc.AsyncEvents.INotifyPropertyChangedAsync");
-        if (model.NotifyPropertyChanging)  interfaces.Add("global::ZeroAlloc.AsyncEvents.INotifyPropertyChangingAsync");
-        if (model.NotifyCollectionChanged) interfaces.Add("global::ZeroAlloc.AsyncEvents.INotifyCollectionChangedAsync");
-        if (model.NotifyDataErrorInfo)     interfaces.Add("global::ZeroAlloc.AsyncEvents.INotifyDataErrorInfoAsync");
+        if (model.NotifyPropertyChanged)   interfaces.Add("global::ZeroAlloc.Notify.INotifyPropertyChangedAsync");
+        if (model.NotifyPropertyChanging)  interfaces.Add("global::ZeroAlloc.Notify.INotifyPropertyChangingAsync");
+        if (model.NotifyCollectionChanged) interfaces.Add("global::ZeroAlloc.Notify.INotifyCollectionChangedAsync");
+        if (model.NotifyDataErrorInfo)     interfaces.Add("global::ZeroAlloc.Notify.INotifyDataErrorInfoAsync");
 
         var interfaceList = interfaces.Count > 0 ? " : " + string.Join(", ", interfaces) : "";
         sb.AppendLine($"partial class {model.TypeName}{interfaceList}");
@@ -56,31 +57,31 @@ internal static class NotifyWriter
 
         if (model.NotifyPropertyChanged)
             WriteEventMember(sb, mode,
-                "global::ZeroAlloc.AsyncEvents.AsyncPropertyChangedEventArgs",
+                "global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs",
                 "_propertyChangedAsync", "PropertyChangedAsync",
                 "    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangedAsync(string propertyName, global::System.Threading.CancellationToken ct = default)",
-                "        => _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.AsyncEvents.AsyncPropertyChangedEventArgs(propertyName), ct);");
+                "        => _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(propertyName), ct);");
 
         if (model.NotifyPropertyChanging)
             WriteEventMember(sb, mode,
-                "global::ZeroAlloc.AsyncEvents.AsyncPropertyChangingEventArgs",
+                "global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs",
                 "_propertyChangingAsync", "PropertyChangingAsync",
                 "    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangingAsync(string propertyName, global::System.Threading.CancellationToken ct = default)",
-                "        => _propertyChangingAsync.InvokeAsync(new global::ZeroAlloc.AsyncEvents.AsyncPropertyChangingEventArgs(propertyName), ct);");
+                "        => _propertyChangingAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(propertyName), ct);");
 
         if (model.NotifyCollectionChanged)
             WriteEventMember(sb, mode,
-                "global::ZeroAlloc.AsyncEvents.AsyncCollectionChangedEventArgs",
+                "global::ZeroAlloc.Notify.AsyncCollectionChangedEventArgs",
                 "_collectionChangedAsync", "CollectionChangedAsync",
-                "    protected global::System.Threading.Tasks.ValueTask RaiseCollectionChangedAsync(global::ZeroAlloc.AsyncEvents.AsyncCollectionChangedEventArgs args, global::System.Threading.CancellationToken ct = default)",
+                "    protected global::System.Threading.Tasks.ValueTask RaiseCollectionChangedAsync(global::ZeroAlloc.Notify.AsyncCollectionChangedEventArgs args, global::System.Threading.CancellationToken ct = default)",
                 "        => _collectionChangedAsync.InvokeAsync(args, ct);");
 
         if (model.NotifyDataErrorInfo)
             WriteEventMember(sb, mode,
-                "global::ZeroAlloc.AsyncEvents.AsyncErrorsChangedEventArgs",
+                "global::ZeroAlloc.Notify.AsyncErrorsChangedEventArgs",
                 "_errorsChangedAsync", "ErrorsChangedAsync",
                 "    protected global::System.Threading.Tasks.ValueTask RaiseErrorsChangedAsync(string? propertyName, global::System.Threading.CancellationToken ct = default)",
-                "        => _errorsChangedAsync.InvokeAsync(new global::ZeroAlloc.AsyncEvents.AsyncErrorsChangedEventArgs(propertyName), ct);");
+                "        => _errorsChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncErrorsChangedEventArgs(propertyName), ct);");
     }
 
     private static void WriteEventMember(
@@ -127,7 +128,7 @@ internal static class NotifyWriter
         if (model.NotifyPropertyChanging)
         {
             if (field.Sequential && !model.ClassLevelSequential)
-                sb.AppendLine($"        await _propertyChangingAsync.InvokeAsync(new global::ZeroAlloc.AsyncEvents.AsyncPropertyChangingEventArgs(nameof({field.PropertyName})), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);");
+                sb.AppendLine($"        await _propertyChangingAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(nameof({field.PropertyName})), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);");
             else
                 sb.AppendLine($"        await RaisePropertyChangingAsync(nameof({field.PropertyName}), ct).ConfigureAwait(false);");
         }
@@ -135,7 +136,7 @@ internal static class NotifyWriter
         if (model.NotifyPropertyChanged)
         {
             if (field.Sequential && !model.ClassLevelSequential)
-                sb.AppendLine($"        await _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.AsyncEvents.AsyncPropertyChangedEventArgs(nameof({field.PropertyName})), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);");
+                sb.AppendLine($"        await _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(nameof({field.PropertyName})), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);");
             else
                 sb.AppendLine($"        await RaisePropertyChangedAsync(nameof({field.PropertyName}), ct).ConfigureAwait(false);");
         }

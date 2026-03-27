@@ -2,7 +2,7 @@
 
 ## Overview
 
-ZeroAlloc.Notify is designed to eliminate allocations on the critical path of property and collection change notifications. By using Roslyn source generation and compile-time dispatch, all event invocations are inlined at the call site with zero allocations.
+ZeroAlloc.Notify is designed to minimize allocations on property and collection change notifications. By using Roslyn source generation and compile-time dispatch, all event invocations are inlined at the call site. Sync paths target zero allocation; the async dispatch path has modest overhead from the `ValueTask` state machine (48 B per notification in benchmarks).
 
 ## Benchmark Results
 
@@ -31,6 +31,8 @@ ZeroAlloc.Notify is designed to eliminate allocations on the critical path of pr
 | ZeroAlloc.Notify async | 1.5 ns | 0 B | Full async support |
 
 ## Zero-Allocation Design
+
+> The event args types (`AsyncPropertyChangedEventArgs`, etc.) are `readonly struct` to minimize heap allocation. The async dispatch path itself has modest overhead from the `ValueTask` state machine.
 
 ### 1. Static Dispatch
 
@@ -97,8 +99,8 @@ Results are output to `BenchmarkDotNet.Artifacts/results/`.
 
 ### vs INotifyPropertyChanged (Standard INPC)
 
-- **Allocation**: ZeroAlloc allocates 0 bytes; INPC allocates 48 bytes per notification
-- **Speed**: 3.5–5.2x faster depending on operation
+- **Allocation**: ZeroAlloc async allocates 48 B; INPC allocates 24 B per notification (different operation — INPC is sync-only)
+- **Speed**: Async path is 2.9x slower than sync INPC baseline — the cost buys full await semantics
 - **Async support**: INPC has no built-in async support; ZeroAlloc.Notify has first-class `ValueTask` support
 - **Full await**: INPC cannot await handlers; ZeroAlloc can
 
@@ -111,14 +113,14 @@ Results are output to `BenchmarkDotNet.Artifacts/results/`.
 ### vs PropertyChanged.Fody
 
 - **Dispatch**: Fody rewrites IL at build time; ZeroAlloc uses Roslyn source generation
-- **Allocation**: Both are near-zero; ZeroAlloc is confirmed 0 B via MemoryDiagnoser
+- **Allocation**: Fody is 0 B (sync only); ZeroAlloc async is 48 B — the overhead of awaitable dispatch
 - **Async support**: Fody has no async handler dispatch; ZeroAlloc has first-class `ValueTask`
 - **Full await**: Fody cannot await handlers; ZeroAlloc can
 
 ### vs MVVM Toolkit (CommunityToolkit.Mvvm)
 
 - **Async support**: MVVM Toolkit has limited async support; ZeroAlloc has first-class async
-- **Allocation pattern**: MVVM Toolkit allocates in certain scenarios; ZeroAlloc allocates 0B
+- **Allocation pattern**: MVVM Toolkit allocates 0 B for sync notifications; ZeroAlloc async allocates 48 B for awaitable dispatch
 - **API surface**: MVVM Toolkit is broader (relaycommand, state management); ZeroAlloc is focused on notifications
 - **Integration**: ZeroAlloc works standalone; MVVM Toolkit is part of a larger ecosystem
 

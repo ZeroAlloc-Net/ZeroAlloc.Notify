@@ -4,7 +4,7 @@
 [![Build](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/actions/workflows/ci.yml/badge.svg)](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-ZeroAlloc.Notify is a source-generated, zero-allocation notification library for .NET 8 and .NET 10. It provides async-first property and collection change notifications without reflection or dynamic dispatch. The Roslyn source generator eliminates runtime overhead by wiring all dispatch at compile time — no allocations, no virtual dispatch, fully awaitable handlers.
+ZeroAlloc.Notify is a source-generated notification library for .NET 8 and .NET 10. It provides async-first property and collection change notifications without reflection or dynamic dispatch. The Roslyn source generator eliminates runtime overhead by wiring all dispatch at compile time — no virtual dispatch, fully awaitable handlers.
 
 ## Install
 
@@ -54,7 +54,7 @@ await vm.SetAgeAsync(30);
 
 ## Performance
 
-ZeroAlloc.Notify achieves significant performance improvements over standard INPC and alternative frameworks with zero heap allocation on all notification paths (.NET 10, i9-12900HK, BenchmarkDotNet).
+ZeroAlloc.Notify provides **async-first, fully awaitable handler dispatch** — the only framework in this comparison where `await vm.SetNameAsync(...)` truly awaits all handlers. The async path runs at competitive speed with modest allocation (.NET 10, i9-12900HK, BenchmarkDotNet).
 
 | Method | Mean | Alloc | vs Baseline |
 |--------|------|-------|-------------|
@@ -74,7 +74,7 @@ See [docs/performance.md](docs/performance.md) for detailed benchmark results an
 - **Data Validation** — `INotifyDataErrorInfoAsync` for async error collection
 - **Sequential & Parallel** — `[InvokeSequentially]` attribute for handler ordering
 - **Compiler Diagnostics** — Missing handlers and misconfigurations caught at build time
-- **Zero Allocation** — `ValueTask`, `readonly record struct`, static dispatch
+- **Async-First** — Fully awaitable `ValueTask` handlers; no fire-and-forget, no callbacks
 - **Native AOT Compatible** — No reflection at runtime; all dispatch resolved at compile time
 - **Source Generated** — Full type safety with compile-time verification
 

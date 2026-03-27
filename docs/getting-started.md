@@ -20,15 +20,12 @@ Add the generator as an analyzer:
 
 ```csharp
 using ZeroAlloc.Notify;
-using ZeroAlloc.Notify.Attributes;
 
+[NotifyPropertyChangedAsync]
 public partial class UserViewModel
 {
     [ObservableProperty]
-    private string name = "Anonymous";
-
-    [NotifyPropertyChangedAsync]
-    partial void OnNameChanged(string oldValue, string newValue);
+    private string _name = "Anonymous";
 }
 ```
 
@@ -52,13 +49,11 @@ await vm.SetNameAsync("Alice");
 ## Observable Collections
 
 ```csharp
+[NotifyCollectionChangedAsync]
 public partial class TodoListViewModel
 {
     [ObservableProperty]
-    private ObservableCollection<string> todos = new();
-
-    [NotifyCollectionChangedAsync]
-    partial void OnTodosChanged(object? sender, NotifyCollectionChangedEventArgs e);
+    private ObservableCollection<string> _todos = new();
 }
 
 var vm = new TodoListViewModel();
@@ -73,29 +68,47 @@ await vm.SetTodosAsync(new ObservableCollection<string> { "Task 1" });
 ## Data Validation
 
 ```csharp
+using System.Collections;
+using System.Collections.Concurrent;
+using ZeroAlloc.Notify;
+
+[NotifyDataErrorInfoAsync]
 public partial class FormViewModel : INotifyDataErrorInfoAsync
 {
+    private readonly ConcurrentDictionary<string, List<string>> _errors = new();
+
     [ObservableProperty]
-    private string email = "";
+    private string _email = "";
 
-    [NotifyPropertyChangedAsync]
-    partial void OnEmailChanged(string oldValue, string newValue)
+    public bool HasErrors => !_errors.IsEmpty;
+
+    public IEnumerable GetErrors(string? propertyName)
+        => propertyName is null
+            ? _errors.Values.SelectMany(e => e)
+            : _errors.TryGetValue(propertyName, out var list) ? list : Enumerable.Empty<string>();
+
+    private async ValueTask ValidateEmailAsync(string value, CancellationToken ct)
     {
-        if (string.IsNullOrEmpty(newValue))
-            AddError(nameof(Email), "Email is required");
-        else if (!newValue.Contains("@"))
-            AddError(nameof(Email), "Invalid email format");
-        else
-            RemoveError(nameof(Email));
+        _errors.Remove(nameof(Email), out _);
+        if (string.IsNullOrEmpty(value))
+            _errors[nameof(Email)] = new List<string> { "Email is required" };
+        else if (!value.Contains('@'))
+            _errors[nameof(Email)] = new List<string> { "Invalid email format" };
+        await RaiseErrorsChangedAsync(nameof(Email), ct);
     }
-
-    [NotifyDataErrorInfoAsync]
-    partial void OnErrorsChanged();
 }
 
 var vm = new FormViewModel();
-var hasErrors = (await vm.GetHasErrorsAsync());
-var errors = (await vm.GetErrorsAsync(nameof(FormViewModel.Email))).ToList();
+vm.PropertyChangedAsync += async (args, ct) =>
+{
+    if (args.PropertyName == nameof(vm.Email))
+        await vm.ValidateEmailAsync((string)args.NewValue!, ct);
+};
+
+await vm.SetEmailAsync("not-an-email");
+
+var hasErrors = vm.HasErrors;
+var errors = vm.GetErrors(nameof(vm.Email));
 ```
 
 ## Key Concepts
@@ -125,12 +138,13 @@ vm.PropertyChangedAsync += async (args, ct) =>
 By default, handlers run in **parallel** (fire-and-forget):
 
 ```csharp
-[ObservableProperty]
-private string name;
-
-[InvokeSequentially] // New: enforce sequential execution
 [NotifyPropertyChangedAsync]
-partial void OnNameChanged(string oldValue, string newValue);
+[InvokeSequentially] // Enforce sequential handler execution for this class
+public partial class MyViewModel
+{
+    [ObservableProperty]
+    private string _name = "";
+}
 ```
 
 ### Source Generation
@@ -140,7 +154,7 @@ The source generator automatically creates:
 - Event raiser methods
 - Implementation of `INotifyPropertyChangedAsync`, `INotifyCollectionChangedAsync`, etc.
 
-You write the `partial` method; the generator creates the rest.
+You apply the attributes; the generator creates the rest.
 
 ## Next Steps
 

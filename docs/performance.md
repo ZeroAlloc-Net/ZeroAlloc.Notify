@@ -15,24 +15,11 @@ ZeroAlloc.Notify is designed to minimize allocations on property and collection 
 | `Fody_SetName` | 17.57 ns | 0 B | 1.22x faster |
 | `ZeroAlloc_SetNameAsync` | 61.84 ns | 48 B | **2.9x slower baseline, fully awaitable** |
 
-### Collection Notifications (5 Handlers)
-
-| Operation | Time | Allocation | vs INotifyCollectionChanged |
-|-----------|------|------------|---------------------------|
-| Standard INotifyCollectionChanged | 8.5 ns | 96 B | baseline |
-| ZeroAlloc.Notify (sync) | 2.1 ns | 0 B | **4.0x faster, 100% less allocation** |
-| ZeroAlloc.Notify (async) | 2.8 ns | 0 B | **3.0x faster, 100% less allocation** |
-
-### Data Validation (ErrorsChanged, 5 Handlers)
-
-| Operation | Time | Allocation | Notes |
-|-----------|------|------------|-------|
-| INotifyDataErrorInfo | 6.1 ns | 64 B | Sync only |
-| ZeroAlloc.Notify async | 1.5 ns | 0 B | Full async support |
+> **Note:** Collection and validation benchmarks are not yet included in the benchmark suite. The property notification table above is the only measured result. See [benchmarks/Notify.Benchmarks/](../benchmarks/Notify.Benchmarks/) to add more.
 
 ## Zero-Allocation Design
 
-> The event args types (`AsyncPropertyChangedEventArgs`, etc.) are `readonly struct` to minimize heap allocation. The async dispatch path itself has modest overhead from the `ValueTask` state machine.
+> The event args types (`AsyncPropertyChangedEventArgs`, etc.) are `sealed class` passed by reference. The async dispatch path itself has modest overhead from the `ValueTask` state machine.
 
 ### 1. Static Dispatch
 
@@ -57,18 +44,17 @@ private async ValueTask OnPropertyChanged(string propertyName, object oldValue, 
 
 All async paths use `ValueTask<T>` to avoid boxing when handlers complete synchronously. The source generator never allocates a Task object for synchronous completion.
 
-### 3. Readonly Struct Event Args
+### 3. Sealed Class Event Args
 
-Event argument types (`AsyncPropertyChangedEventArgs`, etc.) are `readonly struct` to eliminate heap allocations:
+Event argument types (`AsyncPropertyChangedEventArgs`, etc.) are `sealed class`, passed by reference across all handlers without copying:
 
 ```csharp
-public readonly struct AsyncPropertyChangedEventArgs
+// AsyncPropertyChangedEventArgs — sealed class, passed by reference
+public sealed class AsyncPropertyChangedEventArgs
 {
-    public readonly string PropertyName;
-    public readonly object? OldValue;
-    public readonly object? NewValue;
-    
-    // No allocation — this goes on the stack
+    public string PropertyName { get; }
+    public object? OldValue { get; }
+    public object? NewValue { get; }
 }
 ```
 

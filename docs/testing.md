@@ -115,11 +115,16 @@ public async Task SetNameAsync_PropagatesCancellation()
 public async Task SetEmailAsync_AddsError_WhenInvalid()
 {
     var vm = new RegistrationViewModel();
+    vm.PropertyChangedAsync += async (args, ct) =>
+    {
+        if (args.PropertyName == nameof(vm.Email))
+            await vm.ValidateEmailAsync((string)args.NewValue!, ct);
+    };
 
     await vm.SetEmailAsync("not-an-email");
 
-    Assert.True(await vm.GetHasErrorsAsync());
-    var errors = await vm.GetErrorsAsync(nameof(vm.Email));
+    Assert.True(vm.HasErrors);
+    var errors = vm.GetErrors(nameof(vm.Email)).Cast<string>().ToList();
     Assert.Contains(errors, e => e.Contains("Invalid"));
 }
 ```

@@ -28,45 +28,55 @@ The source generator automatically creates:
 
 ## Property Notification Methods
 
-Define a partial method to handle property changes. The generator wires it up automatically:
+Apply `[NotifyPropertyChangedAsync]` to the class and `[ObservableProperty]` to backing fields. The generator wires up all dispatch automatically:
 
 ```csharp
-[ObservableProperty]
-private string firstName = "";
-
 [NotifyPropertyChangedAsync]
-partial void OnFirstNameChanged(string oldValue, string newValue);
+public partial class PersonViewModel
+{
+    [ObservableProperty]
+    private string _firstName = "";
+}
 ```
 
 The source generator creates:
 
 ```csharp
 // Generated
-public async ValueTask SetFirstNameAsync(string value)
+public async ValueTask SetFirstNameAsync(string value, CancellationToken ct = default)
 {
-    if (firstName == value) return;
-    var oldValue = firstName;
-    firstName = value;
-    await OnFirstNameChanged(oldValue, value);
-    await RaisePropertyChangedAsync(nameof(FirstName), oldValue, value);
+    if (_firstName == value) return;
+    var oldValue = _firstName;
+    _firstName = value;
+    await RaisePropertyChangedAsync(nameof(FirstName), oldValue, value, ct);
 }
 ```
 
 ## Validation During Set
 
-Perform validation in your notification method:
+Perform validation by subscribing to `PropertyChangedAsync` in the constructor:
 
 ```csharp
-[ObservableProperty]
-private int age;
-
 [NotifyPropertyChangedAsync]
-partial void OnAgeChanged(int oldValue, int newValue)
+public partial class PersonViewModel
 {
-    if (newValue < 0 || newValue > 150)
-        throw new ArgumentOutOfRangeException(nameof(Age), "Age must be 0-150");
-    
-    Console.WriteLine($"Age changed from {oldValue} to {newValue}");
+    [ObservableProperty]
+    private int _age;
+
+    public PersonViewModel()
+    {
+        PropertyChangedAsync += (args, ct) =>
+        {
+            if (args.PropertyName == nameof(Age))
+            {
+                var newValue = (int)args.NewValue!;
+                if (newValue < 0 || newValue > 150)
+                    throw new ArgumentOutOfRangeException(nameof(Age), "Age must be 0-150");
+                Console.WriteLine($"Age changed from {args.OldValue} to {newValue}");
+            }
+            return ValueTask.CompletedTask;
+        };
+    }
 }
 ```
 
@@ -75,26 +85,24 @@ partial void OnAgeChanged(int oldValue, int newValue)
 Create computed properties that depend on other observable properties:
 
 ```csharp
+[NotifyPropertyChangedAsync]
 public partial class PersonViewModel
 {
     [ObservableProperty]
-    private string firstName = "";
+    private string _firstName = "";
 
     [ObservableProperty]
-    private string lastName = "";
+    private string _lastName = "";
 
     public string FullName => $"{FirstName} {LastName}";
 
-    [NotifyPropertyChangedAsync]
-    partial void OnFirstNameChanged(string oldValue, string newValue)
+    public PersonViewModel()
     {
-        await RaisePropertyChangedAsync(nameof(FullName), null, FullName);
-    }
-
-    [NotifyPropertyChangedAsync]
-    partial void OnLastNameChanged(string oldValue, string newValue)
-    {
-        await RaisePropertyChangedAsync(nameof(FullName), null, FullName);
+        PropertyChangedAsync += async (args, ct) =>
+        {
+            if (args.PropertyName == nameof(FirstName) || args.PropertyName == nameof(LastName))
+                await RaisePropertyChangedAsync(nameof(FullName), null, FullName, ct);
+        };
     }
 }
 ```
@@ -120,12 +128,11 @@ Or use direct typed handlers via the `INotifyPropertyChangedAsync` interface.
 Only notify if the value actually changes (early exit):
 
 ```csharp
-[ObservableProperty]
-private string email = "";
-
 [NotifyPropertyChangedAsync]
-partial void OnEmailChanged(string oldValue, string newValue)
+public partial class UserViewModel
 {
+    [ObservableProperty]
+    private string _email = "";
     // SetEmailAsync will not raise if oldValue == newValue
     // (automatic early exit in generated code)
 }
@@ -136,11 +143,12 @@ partial void OnEmailChanged(string oldValue, string newValue)
 Properties maintain full type safety. The setter method signature matches the property type:
 
 ```csharp
-[ObservableProperty]
-private List<string> items = new();
-
 [NotifyPropertyChangedAsync]
-partial void OnItemsChanged(List<string> oldValue, List<string> newValue);
+public partial class ItemViewModel
+{
+    [ObservableProperty]
+    private List<string> _items = new();
+}
 
 // Type-safe set
 await vm.SetItemsAsync(new List<string> { "item1" });
@@ -151,17 +159,16 @@ await vm.SetItemsAsync(new List<string> { "item1" });
 For complex scenarios, you can customize property access:
 
 ```csharp
-private string _name = "";
-
-[ObservableProperty]
-private string Name
-{
-    get => _name.ToUpper();
-    set => _name = value;
-}
-
 [NotifyPropertyChangedAsync]
-partial void OnNameChanged(string oldValue, string newValue);
+public partial class UserViewModel
+{
+    private string _nameRaw = "";
+
+    [ObservableProperty]
+    private string _name = "";
+    // The generator creates SetNameAsync; subscribe to PropertyChangedAsync
+    // for any post-set logic.
+}
 ```
 
 ## Nullable Reference Types
@@ -169,14 +176,15 @@ partial void OnNameChanged(string oldValue, string newValue);
 Full support for nullable reference types:
 
 ```csharp
-[ObservableProperty]
-private string? description;
-
-[ObservableProperty]
-private List<string>? items;
-
 [NotifyPropertyChangedAsync]
-partial void OnDescriptionChanged(string? oldValue, string? newValue);
+public partial class ContentViewModel
+{
+    [ObservableProperty]
+    private string? _description;
+
+    [ObservableProperty]
+    private List<string>? _items;
+}
 ```
 
 ## Performance Characteristics

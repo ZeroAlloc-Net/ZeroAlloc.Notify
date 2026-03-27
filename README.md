@@ -24,19 +24,14 @@ The generator package must also be added as an analyzer:
 
 ```csharp
 // 1. Define a ViewModel with observable properties
+[NotifyPropertyChangedAsync]
 public partial class UserViewModel
 {
     [ObservableProperty]
-    private string name;
+    private string _name = "";
 
     [ObservableProperty]
-    private int age;
-
-    [NotifyPropertyChangedAsync]
-    partial void OnNameChanged(string oldValue, string newValue);
-
-    [NotifyPropertyChangedAsync]
-    partial void OnAgeChanged(int oldValue, int newValue);
+    private int _age;
 }
 
 // 2. Subscribe to async notifications

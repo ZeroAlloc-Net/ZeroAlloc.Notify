@@ -26,22 +26,16 @@ await vm.SetNameAsync("Alice");
 Perform async validation during property changes:
 
 ```csharp
+[NotifyPropertyChangedAsync]
 public partial class RegistrationViewModel
 {
     [ObservableProperty]
-    private string email = "";
-
-    [NotifyPropertyChangedAsync]
-    partial void OnEmailChanged(string oldValue, string newValue)
-    {
-        // Validate email exists in database
-    }
+    private string _email = "";
 
     private async ValueTask ValidateEmailAsync(string email, CancellationToken ct)
     {
         var exists = await _userService.EmailExistsAsync(email, ct);
-        if (!exists)
-            AddError(nameof(Email), "Email not registered");
+        // handle result, e.g. raise ErrorsChangedAsync via INotifyDataErrorInfoAsync
     }
 }
 
@@ -49,7 +43,7 @@ vm.PropertyChangedAsync += async (args, ct) =>
 {
     if (args.PropertyName == nameof(RegistrationViewModel.Email))
     {
-        await vm.ValidateEmailAsync(args.NewValue, ct);
+        await vm.ValidateEmailAsync((string)args.NewValue!, ct);
     }
 };
 
@@ -88,14 +82,12 @@ cts.Cancel();
 By default, handlers run in parallel (fire-and-forget). Use `[InvokeSequentially]` to enforce ordering:
 
 ```csharp
+[NotifyPropertyChangedAsync]
+[InvokeSequentially] // Handlers run in subscribe order
 public partial class ProcessViewModel
 {
     [ObservableProperty]
-    private string status = "";
-
-    [InvokeSequentially] // Handlers run in subscribe order
-    [NotifyPropertyChangedAsync]
-    partial void OnStatusChanged(string oldValue, string newValue);
+    private string _status = "";
 }
 
 // These handlers will execute in order, awaiting each one
@@ -126,11 +118,12 @@ await vm.SetStatusAsync("processing");
 Without `[InvokeSequentially]`, handlers run concurrently:
 
 ```csharp
-[ObservableProperty]
-private string status = "";
-
-[NotifyPropertyChangedAsync]  // No InvokeSequentially
-partial void OnStatusChanged(string oldValue, string newValue);
+[NotifyPropertyChangedAsync]  // No InvokeSequentially — parallel is the default
+public partial class ProcessViewModel
+{
+    [ObservableProperty]
+    private string _status = "";
+}
 
 // These run in parallel
 vm.PropertyChangedAsync += async (args, ct) =>
@@ -199,17 +192,18 @@ vm.PropertyChangedAsync += async (args, ct) =>
 ## Integration with External Services
 
 ```csharp
+[NotifyPropertyChangedAsync]
 public partial class CustomerViewModel
 {
     [ObservableProperty]
-    private string email = "";
+    private string _email = "";
 
     private readonly ICustomerService _service;
 
     public CustomerViewModel(ICustomerService service)
     {
         _service = service;
-        
+
         PropertyChangedAsync += OnPropertyChangedAsync;
     }
 
@@ -217,9 +211,8 @@ public partial class CustomerViewModel
     {
         if (args.PropertyName == nameof(Email))
         {
-            var isValid = await _service.ValidateEmailAsync(args.NewValue, ct);
-            if (!isValid)
-                AddError(nameof(Email), "Email is invalid");
+            var isValid = await _service.ValidateEmailAsync((string?)args.NewValue, ct);
+            // handle invalid email — see docs/validation.md for the INotifyDataErrorInfoAsync pattern
         }
     }
 }

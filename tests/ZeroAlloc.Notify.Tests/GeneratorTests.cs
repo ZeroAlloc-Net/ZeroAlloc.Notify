@@ -46,6 +46,21 @@ public class GeneratorTests
             """);
 
     [Fact]
+    public Task InvokeSequentially_OnField_OnlyAffectsThatField()
+        => Verify("""
+            using ZeroAlloc.Notify;
+            [NotifyPropertyChangedAsync]
+            public partial class MyViewModel
+            {
+                [ObservableProperty]
+                private string _name = "";
+                [ObservableProperty]
+                [InvokeSequentially]
+                private int _count;
+            }
+            """);
+
+    [Fact]
     public Task NotifyCollectionChangedAsync_GeneratesPlumbing()
         => Verify("""
             using ZeroAlloc.Notify;

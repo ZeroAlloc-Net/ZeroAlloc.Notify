@@ -125,10 +125,20 @@ internal static class NotifyWriter
         sb.AppendLine("    {");
         sb.AppendLine($"        if (global::System.Collections.Generic.EqualityComparer<{field.TypeName}>.Default.Equals({field.FieldName}, value)) return;");
         if (model.NotifyPropertyChanging)
-            sb.AppendLine($"        await RaisePropertyChangingAsync(nameof({field.PropertyName}), ct).ConfigureAwait(false);");
+        {
+            if (field.Sequential && !model.ClassLevelSequential)
+                sb.AppendLine($"        await _propertyChangingAsync.InvokeAsync(new global::ZeroAlloc.AsyncEvents.AsyncPropertyChangingEventArgs(nameof({field.PropertyName})), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);");
+            else
+                sb.AppendLine($"        await RaisePropertyChangingAsync(nameof({field.PropertyName}), ct).ConfigureAwait(false);");
+        }
         sb.AppendLine($"        {field.FieldName} = value;");
         if (model.NotifyPropertyChanged)
-            sb.AppendLine($"        await RaisePropertyChangedAsync(nameof({field.PropertyName}), ct).ConfigureAwait(false);");
+        {
+            if (field.Sequential && !model.ClassLevelSequential)
+                sb.AppendLine($"        await _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.AsyncEvents.AsyncPropertyChangedEventArgs(nameof({field.PropertyName})), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);");
+            else
+                sb.AppendLine($"        await RaisePropertyChangedAsync(nameof({field.PropertyName}), ct).ConfigureAwait(false);");
+        }
         sb.AppendLine("    }");
         sb.AppendLine();
     }

@@ -92,4 +92,62 @@ public class IntegrationTests
         Assert.True(changed);
         Assert.Equal(42, vm.Count);
     }
+
+    [Fact]
+    public async Task SetNameAsync_ChangedEvent_ContainsOldAndNewValues()
+    {
+        var vm = new TestViewModel();
+        object? capturedOld = null;
+        object? capturedNew = null;
+
+        vm.PropertyChangedAsync += (args, ct) =>
+        {
+            capturedOld = args.OldValue;
+            capturedNew = args.NewValue;
+            return ValueTask.CompletedTask;
+        };
+
+        await vm.SetNameAsync("Alice");
+
+        Assert.Equal("", capturedOld);   // default field value
+        Assert.Equal("Alice", capturedNew);
+    }
+
+    [Fact]
+    public async Task SetNameAsync_ChangingEvent_ContainsOldAndNewValues()
+    {
+        var vm = new TestViewModel();
+        object? capturedOld = null;
+        object? capturedNew = null;
+
+        vm.PropertyChangingAsync += (args, ct) =>
+        {
+            capturedOld = args.OldValue;
+            capturedNew = args.NewValue;
+            return ValueTask.CompletedTask;
+        };
+
+        await vm.SetNameAsync("Bob");
+
+        Assert.Equal("", capturedOld);   // value before assignment
+        Assert.Equal("Bob", capturedNew); // value about to be set
+    }
+
+    [Fact]
+    public async Task SetNameAsync_ChangingEventOldValue_ReflectsValueBeforeAssignment()
+    {
+        var vm = new TestViewModel();
+        await vm.SetNameAsync("first");
+
+        object? oldInChanging = null;
+        object? oldInChanged  = null;
+
+        vm.PropertyChangingAsync += (args, ct) => { oldInChanging = args.OldValue; return ValueTask.CompletedTask; };
+        vm.PropertyChangedAsync  += (args, ct) => { oldInChanged  = args.OldValue; return ValueTask.CompletedTask; };
+
+        await vm.SetNameAsync("second");
+
+        Assert.Equal("first", oldInChanging); // not yet changed when Changing fires
+        Assert.Equal("first", oldInChanged);  // same old value captured before assignment
+    }
 }

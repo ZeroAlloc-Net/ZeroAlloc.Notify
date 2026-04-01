@@ -15,7 +15,7 @@ ZeroAlloc.Notify is designed to minimize allocations on property and collection 
 | `Fody_SetName` | 17.57 ns | 0 B | 1.22x faster |
 | `ZeroAlloc_SetNameAsync` | 61.84 ns | 48 B | **2.9x slower baseline, fully awaitable** |
 
-> **Note:** Collection and validation benchmarks are not yet included in the benchmark suite. The property notification table above is the only measured result. See [benchmarks/Notify.Benchmarks/](../benchmarks/Notify.Benchmarks/) to add more.
+> **Note:** Collection and validation benchmarks are not yet included in the benchmark suite. The property notification table above is the only measured result. See `benchmarks/Notify.Benchmarks/` to add more.
 
 ## Zero-Allocation Design
 

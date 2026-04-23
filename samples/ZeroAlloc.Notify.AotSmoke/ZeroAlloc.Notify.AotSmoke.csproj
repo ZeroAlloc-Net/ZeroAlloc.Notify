@@ -12,8 +12,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Main lib is netstandard2.0 only; SetTargetFramework=net10.0 doesn't match
+         any target. ns2.0 is compatible with a net10.0 consumer, so leave it to
+         the default NuGet resolution. -->
     <ProjectReference Include="..\..\src\ZeroAlloc.Notify\ZeroAlloc.Notify.csproj"
-                      SetTargetFramework="TargetFramework=net10.0" />
+                      UndefineProperties="PublishAot" />
     <ProjectReference Include="..\..\src\ZeroAlloc.Notify.Generator\ZeroAlloc.Notify.Generator.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false"

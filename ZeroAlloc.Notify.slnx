@@ -9,4 +9,7 @@
   <Folder Name="/benchmarks/">
     <Project Path="benchmarks/Notify.Benchmarks/Notify.Benchmarks.csproj" />
   </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/ZeroAlloc.Notify.AotSmoke/ZeroAlloc.Notify.AotSmoke.csproj" />
+  </Folder>
 </Solution>

@@ -7,7 +7,7 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="ZeroAlloc.AsyncEvents" Version="1.0.0" />
+    <PackageReference Include="ZeroAlloc.AsyncEvents" Version="1.0.1" />
     <ProjectReference Include="..\ZeroAlloc.Notify.Generator\ZeroAlloc.Notify.Generator.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false"

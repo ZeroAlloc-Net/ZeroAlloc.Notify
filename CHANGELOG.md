@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0
+
+Stability milestone — public API of `ZeroAlloc.Notify` is now considered stable. No code changes from 0.1.0; this release marks the transition out of pre-1.0 SemVer.
+
 ## 1.0.0 (2026-04-01)
 
 

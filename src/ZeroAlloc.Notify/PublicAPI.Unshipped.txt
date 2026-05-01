@@ -1,0 +1,43 @@
+#nullable enable
+ZeroAlloc.Notify.AsyncCollectionChangedEventArgs
+ZeroAlloc.Notify.AsyncCollectionChangedEventArgs.Action.get -> System.Collections.Specialized.NotifyCollectionChangedAction
+ZeroAlloc.Notify.AsyncCollectionChangedEventArgs.AsyncCollectionChangedEventArgs(System.Collections.Specialized.NotifyCollectionChangedAction action, System.Collections.IList? newItems, System.Collections.IList? oldItems, int newStartingIndex, int oldStartingIndex) -> void
+ZeroAlloc.Notify.AsyncCollectionChangedEventArgs.NewItems.get -> System.Collections.IList?
+ZeroAlloc.Notify.AsyncCollectionChangedEventArgs.NewStartingIndex.get -> int
+ZeroAlloc.Notify.AsyncCollectionChangedEventArgs.OldItems.get -> System.Collections.IList?
+ZeroAlloc.Notify.AsyncCollectionChangedEventArgs.OldStartingIndex.get -> int
+ZeroAlloc.Notify.AsyncErrorsChangedEventArgs
+ZeroAlloc.Notify.AsyncErrorsChangedEventArgs.AsyncErrorsChangedEventArgs(string? propertyName) -> void
+ZeroAlloc.Notify.AsyncErrorsChangedEventArgs.PropertyName.get -> string?
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.AsyncPropertyChangedEventArgs(string! propertyName, object? oldValue, object? newValue) -> void
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.NewValue.get -> object?
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.OldValue.get -> object?
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.PropertyName.get -> string!
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.AsyncPropertyChangingEventArgs(string! propertyName, object? oldValue, object? newValue) -> void
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.NewValue.get -> object?
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.OldValue.get -> object?
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.PropertyName.get -> string!
+ZeroAlloc.Notify.INotifyCollectionChangedAsync
+ZeroAlloc.Notify.INotifyCollectionChangedAsync.CollectionChangedAsync -> ZeroAlloc.AsyncEvents.AsyncEvent<ZeroAlloc.Notify.AsyncCollectionChangedEventArgs!>!
+ZeroAlloc.Notify.INotifyDataErrorInfoAsync
+ZeroAlloc.Notify.INotifyDataErrorInfoAsync.ErrorsChangedAsync -> ZeroAlloc.AsyncEvents.AsyncEvent<ZeroAlloc.Notify.AsyncErrorsChangedEventArgs!>!
+ZeroAlloc.Notify.INotifyDataErrorInfoAsync.GetErrors(string? propertyName) -> System.Collections.IEnumerable!
+ZeroAlloc.Notify.INotifyDataErrorInfoAsync.HasErrors.get -> bool
+ZeroAlloc.Notify.INotifyPropertyChangedAsync
+ZeroAlloc.Notify.INotifyPropertyChangedAsync.PropertyChangedAsync -> ZeroAlloc.AsyncEvents.AsyncEvent<ZeroAlloc.Notify.AsyncPropertyChangedEventArgs!>!
+ZeroAlloc.Notify.INotifyPropertyChangingAsync
+ZeroAlloc.Notify.INotifyPropertyChangingAsync.PropertyChangingAsync -> ZeroAlloc.AsyncEvents.AsyncEvent<ZeroAlloc.Notify.AsyncPropertyChangingEventArgs!>!
+ZeroAlloc.Notify.InvokeSequentiallyAttribute
+ZeroAlloc.Notify.InvokeSequentiallyAttribute.InvokeSequentiallyAttribute() -> void
+ZeroAlloc.Notify.NotifyCollectionChangedAsyncAttribute
+ZeroAlloc.Notify.NotifyCollectionChangedAsyncAttribute.NotifyCollectionChangedAsyncAttribute() -> void
+ZeroAlloc.Notify.NotifyDataErrorInfoAsyncAttribute
+ZeroAlloc.Notify.NotifyDataErrorInfoAsyncAttribute.NotifyDataErrorInfoAsyncAttribute() -> void
+ZeroAlloc.Notify.NotifyPropertyChangedAsyncAttribute
+ZeroAlloc.Notify.NotifyPropertyChangedAsyncAttribute.NotifyPropertyChangedAsyncAttribute() -> void
+ZeroAlloc.Notify.NotifyPropertyChangingAsyncAttribute
+ZeroAlloc.Notify.NotifyPropertyChangingAsyncAttribute.NotifyPropertyChangingAsyncAttribute() -> void
+ZeroAlloc.Notify.ObservablePropertyAttribute
+ZeroAlloc.Notify.ObservablePropertyAttribute.ObservablePropertyAttribute() -> void

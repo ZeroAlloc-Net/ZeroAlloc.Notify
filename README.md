@@ -10,17 +10,13 @@ ZeroAlloc.Notify is a source-generated notification library for .NET 8 and .NET 
 
 ## Install
 
+The source generator is bundled into the main package — a single `PackageReference` is all you need:
+
 ```shell
 dotnet add package ZeroAlloc.Notify
 ```
 
-The generator package must also be added as an analyzer:
-
-```xml
-<ItemGroup>
-  <PackageReference Include="ZeroAlloc.Notify.Generator" Version="*" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-</ItemGroup>
-```
+> The standalone `ZeroAlloc.Notify.Generator` package is still published for backwards compatibility with existing direct PackageReferences, but new consumers should reference only `ZeroAlloc.Notify`.
 
 ## Quick Example
 

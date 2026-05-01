@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.0.1...v1.1.0) (2026-05-01)
+
+
+### Features
+
+* bundle source generator into ZeroAlloc.Notify package ([971f2cb](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/971f2cb9ecda322e9d1cae9a197ee98b1b6ecef7))
+* bundle source generator into ZeroAlloc.Notify package ([97bbaa6](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/97bbaa68d54da6cc236caba4e60b57a423c2b772))
+* lock public API surface (PublicApiAnalyzers + api-compat gate) ([#43](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/43)) ([64c1f74](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/64c1f7400331560e418687a6db1d48330379bf58))
+
 ## [1.0.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.0.0...v1.0.1) (2026-04-30)
 
 

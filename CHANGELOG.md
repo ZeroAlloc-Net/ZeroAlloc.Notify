@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.0...v1.2.1) (2026-05-12)
+
+
+### Bug Fixes
+
+* **readme:** absolute GitHub URLs so nuget.org links resolve ([#54](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/54)) ([ccaa02e](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/ccaa02e8f65086e01b2497f7215fc46f7126b5d9))
+
 ## [1.2.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.1.1...v1.2.0) (2026-05-03)
 
 

@@ -58,7 +58,7 @@ ZeroAlloc.Notify provides **async-first, fully awaitable handler dispatch** — 
 
 > CommunityToolkit.Mvvm and PropertyChanged.Fody support sync notifications only — they cannot await async handlers. ZeroAlloc.Notify is the only framework in this comparison with first-class `ValueTask` handler dispatch.
 
-See [docs/performance.md](docs/performance.md) for detailed benchmark results and zero-allocation design explanation.
+See [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md) for detailed benchmark results and zero-allocation design explanation.
 
 ## Features
 
@@ -75,19 +75,19 @@ See [docs/performance.md](docs/performance.md) for detailed benchmark results an
 
 | Topic | Description |
 |-------|-------------|
-| [Getting Started](docs/getting-started.md) | Install and send your first notification in five minutes |
-| [Observable Properties](docs/observable-properties.md) | Defining and using observable properties |
-| [Async Notifications](docs/async-notifications.md) | Property and collection changed notifications with await support |
-| [Collection Changes](docs/collection-changes.md) | Observable collections with async event dispatch |
-| [Validation](docs/validation.md) | `INotifyDataErrorInfoAsync` with async error handling |
-| [Performance](docs/performance.md) | Zero-alloc internals, detailed benchmarks, Native AOT |
-| [Diagnostics](docs/diagnostics.md) | ZAN001–ZAN010 source generator warnings and errors |
-| [Advanced Patterns](docs/advanced-patterns.md) | Cancellation, scoped bindings, parallel handlers |
-| [Testing](docs/testing.md) | Unit-testing observable models and notification flows |
+| [Getting Started](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/getting-started.md) | Install and send your first notification in five minutes |
+| [Observable Properties](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/observable-properties.md) | Defining and using observable properties |
+| [Async Notifications](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/async-notifications.md) | Property and collection changed notifications with await support |
+| [Collection Changes](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/collection-changes.md) | Observable collections with async event dispatch |
+| [Validation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/validation.md) | `INotifyDataErrorInfoAsync` with async error handling |
+| [Performance](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md) | Zero-alloc internals, detailed benchmarks, Native AOT |
+| [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/diagnostics.md) | ZAN001–ZAN010 source generator warnings and errors |
+| [Advanced Patterns](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/advanced-patterns.md) | Cancellation, scoped bindings, parallel handlers |
+| [Testing](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/testing.md) | Unit-testing observable models and notification flows |
 
 ## Examples
 
-See the [samples](samples/) directory for complete working examples:
+See the [samples](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/tree/main/samples/) directory for complete working examples:
 - WPF MVVM application
 - ASP.NET Core data binding
 - Console property notifications

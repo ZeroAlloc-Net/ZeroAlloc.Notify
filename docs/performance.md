@@ -6,14 +6,26 @@ ZeroAlloc.Notify is designed to minimize allocations on property and collection 
 
 ## Benchmark Results
 
-### Property Notifications (4-Way Comparison)
+### Property Notifications — 4-way comparison
 
-| Method | Mean | Alloc | vs Baseline |
-|--------|------|-------|-------------|
-| `Sync_INotifyPropertyChanged` (baseline) | 21.41 ns | 24 B | — |
-| `CommunityToolkit_SetName` | 31.27 ns | 0 B | 1.47x slower |
-| `Fody_SetName` | 17.57 ns | 0 B | 1.22x faster |
-| `ZeroAlloc_SetNameAsync` | 61.84 ns | 48 B | **2.9x slower baseline, fully awaitable** |
+<!-- BENCH:START -->
+_Last refreshed: 2026-05-13_
+
+.NET 10.0.7, i9-12900HK, BenchmarkDotNet v0.15.8. All four libraries are configured with 5 attached handlers to mirror a realistic MVVM scenario.
+
+| Library | Time | Allocated | Async support |
+|---|---:|---:|:---:|
+| Manual `INotifyPropertyChanged` (baseline) | 33.6 ns | 24 B | ❌ |
+| PropertyChanged.Fody | **30.2 ns** | **0 B** | ❌ |
+| CommunityToolkit.Mvvm | 55.2 ns | 0 B | ❌ |
+| **ZeroAlloc.Notify** | **124.7 ns** | **80 B** | ✅ |
+
+**Honest framing**: ZA.Notify is the slowest of the four and the only one that allocates. The 80 B is the `ValueTask` state machine for fan-out to async handlers. The other three are pure sync and can't `await` propagation.
+
+**ZA.Notify is the only library here that supports async handlers.** The trade-off is the cost of that capability. For pure-sync view models that never need to `await` a handler (the vast majority of XAML/Avalonia/WinUI scenarios), **Fody is the right choice** — it's fastest and 0 B. For scenarios where the setter needs to wait for async work to complete before returning (e.g., async validation before notifying observers; coordinated async state transitions), ZA.Notify is the only library that supports it.
+
+**Per-iteration scale**: even at 124.7 ns / 80 B per setter call, ZA.Notify can run **~8M property changes per second per thread** with ~640 MB/s of GC pressure. Most MVVM workloads have property change rates in the thousands per second, where the difference is invisible.
+<!-- BENCH:END -->
 
 > **Note:** Collection and validation benchmarks are not yet included in the benchmark suite. The property notification table above is the only measured result. See `benchmarks/Notify.Benchmarks/` to add more.
 

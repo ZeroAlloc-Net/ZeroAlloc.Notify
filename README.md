@@ -47,16 +47,16 @@ await vm.SetAgeAsync(30);
 
 ## Performance
 
-ZeroAlloc.Notify provides **async-first, fully awaitable handler dispatch** — the only framework in this comparison where `await vm.SetNameAsync(...)` truly awaits all handlers. The async path runs at competitive speed with modest allocation (.NET 10, i9-12900HK, BenchmarkDotNet).
+ZeroAlloc.Notify provides **async-first, fully awaitable handler dispatch** — the only framework in this comparison where `await vm.SetNameAsync(...)` truly awaits all handlers. Refreshed benchmarks (.NET 10.0.7, i9-12900HK, BenchmarkDotNet v0.15.8, 5 attached handlers):
 
-| Method | Mean | Alloc | vs Baseline |
-|--------|------|-------|-------------|
-| `Sync_INotifyPropertyChanged` (baseline) | 21.41 ns | 24 B | — |
-| `CommunityToolkit_SetName` | 31.27 ns | 0 B | 1.47x slower |
-| `Fody_SetName` | 17.57 ns | 0 B | 1.22x faster |
-| `ZeroAlloc_SetNameAsync` | 61.84 ns | 48 B | **2.9x slower baseline, fully awaitable** |
+| Library | Time | Allocated | Async support |
+|---|---:|---:|:---:|
+| Manual `INotifyPropertyChanged` (baseline) | 33.6 ns | 24 B | ❌ |
+| PropertyChanged.Fody | **30.2 ns** | **0 B** | ❌ |
+| CommunityToolkit.Mvvm | 55.2 ns | 0 B | ❌ |
+| **ZeroAlloc.Notify** | **124.7 ns** | **80 B** | ✅ |
 
-> CommunityToolkit.Mvvm and PropertyChanged.Fody support sync notifications only — they cannot await async handlers. ZeroAlloc.Notify is the only framework in this comparison with first-class `ValueTask` handler dispatch.
+**Honest framing**: ZA.Notify is the slowest of the four and the only one that allocates — the 80 B is the `ValueTask` state machine for fan-out to async handlers. **For pure-sync view models, Fody is the right choice** (fastest, 0 B). ZA.Notify is the only library here that supports async handlers; the trade-off is the cost of that capability. At 124.7 ns / 80 B per setter, it still scales to ~8M property changes per second per thread.
 
 See [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md) for detailed benchmark results and zero-allocation design explanation.
 

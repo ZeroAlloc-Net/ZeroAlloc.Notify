@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.1...v1.2.2) (2026-05-13)
+
+
+### Documentation
+
+* **performance:** refresh 4-way comparison + add BENCH sentinels ([#59](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/59)) ([503b306](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/503b306b5ea9b4613ae4b24071fe89e5432a38f3))
+
 ## [1.2.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.0...v1.2.1) (2026-05-12)
 
 

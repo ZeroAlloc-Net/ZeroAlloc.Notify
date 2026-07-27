@@ -77,7 +77,7 @@ public class IntegrationTests
 
         await vm.SetNameAsync("Eve");
 
-        Assert.Equal(new[] { "changing", "changed" }, order);
+        Assert.Equal(new[] { "changing", "changed" }, order, StringComparer.Ordinal);
     }
 
     [Fact]

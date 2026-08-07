@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.2...v1.2.3) (2026-08-07)
+
+
+### Bug Fixes
+
+* **ci:** remove the duplicate release workflow ([#114](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/114)) ([46223f3](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/46223f34b675ed669c4e1046d940cb4f4f2dfb0a))
+
 ## [1.2.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.1...v1.2.2) (2026-05-13)
 
 

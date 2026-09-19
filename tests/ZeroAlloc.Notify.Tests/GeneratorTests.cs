@@ -2,15 +2,16 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using VerifyXunit;
 using ZeroAlloc.Notify.Generator;
+
+using ZeroAlloc.TestHelpers;
 
 namespace ZeroAlloc.Notify.Tests;
 
 public class GeneratorTests
 {
     [Fact]
-    public Task NotifyPropertyChangedAsync_GeneratesPlumbing()
+    public void NotifyPropertyChangedAsync_GeneratesPlumbing()
         => Verify("""
             using ZeroAlloc.Notify;
             [NotifyPropertyChangedAsync]
@@ -18,7 +19,7 @@ public class GeneratorTests
             """);
 
     [Fact]
-    public Task ObservableProperty_GeneratesPropertyAndAsyncSetter()
+    public void ObservableProperty_GeneratesPropertyAndAsyncSetter()
         => Verify("""
             using ZeroAlloc.Notify;
             [NotifyPropertyChangedAsync]
@@ -33,7 +34,7 @@ public class GeneratorTests
             """);
 
     [Fact]
-    public Task InvokeSequentially_OnClass_SetsSequentialMode()
+    public void InvokeSequentially_OnClass_SetsSequentialMode()
         => Verify("""
             using ZeroAlloc.Notify;
             [NotifyPropertyChangedAsync]
@@ -46,7 +47,7 @@ public class GeneratorTests
             """);
 
     [Fact]
-    public Task InvokeSequentially_OnField_OnlyAffectsThatField()
+    public void InvokeSequentially_OnField_OnlyAffectsThatField()
         => Verify("""
             using ZeroAlloc.Notify;
             [NotifyPropertyChangedAsync]
@@ -61,7 +62,7 @@ public class GeneratorTests
             """);
 
     [Fact]
-    public Task NotifyCollectionChangedAsync_GeneratesPlumbing()
+    public void NotifyCollectionChangedAsync_GeneratesPlumbing()
         => Verify("""
             using ZeroAlloc.Notify;
             [NotifyCollectionChangedAsync]
@@ -69,19 +70,19 @@ public class GeneratorTests
             """);
 
     [Fact]
-    public Task NotifyDataErrorInfoAsync_GeneratesPlumbing()
+    public void NotifyDataErrorInfoAsync_GeneratesPlumbing()
         => Verify("""
             using ZeroAlloc.Notify;
             [NotifyDataErrorInfoAsync]
             public partial class MyModel { }
             """);
 
-    private static Task Verify(string source)
+    private static void Verify(string source)
     {
         var compilation = CreateCompilation(source);
         var generator = new NotifyGenerator();
         var driver = CSharpGeneratorDriver.Create(generator).RunGenerators(compilation);
-        return Verifier.Verify(driver).UseDirectory("Snapshots");
+        GeneratorSnapshot.Verify(driver);
     }
 
     private static IEnumerable<MetadataReference> GetProjectReferences()

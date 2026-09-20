@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.5](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.4...v1.2.5) (2026-09-20)
+
+
+### Bug Fixes
+
+* declare current sibling package versions ([#182](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/182)) ([2bbbf04](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/2bbbf0455283f560d02cc82f92c1848a3157c5e1))
+
 ## [1.2.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.3...v1.2.4) (2026-09-19)
 
 

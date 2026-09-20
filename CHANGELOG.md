@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.7](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.6...v1.2.7) (2026-09-20)
+
+
+### Bug Fixes
+
+* pack every src package instead of a hardcoded list ([#190](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/190)) ([fe68fa5](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/fe68fa54d6219109dadeb8467c218464e1c432da))
+
 ## [1.2.6](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.5...v1.2.6) (2026-09-20)
 
 

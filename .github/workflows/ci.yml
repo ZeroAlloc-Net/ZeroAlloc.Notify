@@ -84,6 +84,3 @@ jobs:
 
   api-compat:
     uses: ZeroAlloc-Net/.github/.github/workflows/api-compat.yml@main
-    with:
-      package-id: ZeroAlloc.Notify
-      csproj-path: src/ZeroAlloc.Notify/ZeroAlloc.Notify.csproj

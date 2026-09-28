@@ -52,10 +52,14 @@ jobs:
 
   aot-smoke:
     runs-on: ubuntu-latest
+    # Typical run is under a few minutes. The bound makes a NativeAOT hang, like
+    # dotnet/runtime#134799, fail fast instead of burning the default six-hour job limit.
+    timeout-minutes: 15
     # Publishes samples/ZeroAlloc.Notify.AotSmoke with PublishAot=true.
     # Exercises the generator-emitted ObservableProperty setters and async
-    # PropertyChanging/PropertyChanged events — any reflection regression in
-    # the INPC plumbing fails the ILC pass with IL2026/IL3050.
+    # PropertyChanging/PropertyChanged events over reference, primitive, struct,
+    # nullable and enum properties. Any reflection regression in the INPC
+    # plumbing fails the ILC pass with IL2026/IL3050.
     steps:
       - uses: actions/checkout@v7
         with:
@@ -80,7 +84,8 @@ jobs:
         run: dotnet publish samples/ZeroAlloc.Notify.AotSmoke/ZeroAlloc.Notify.AotSmoke.csproj -r linux-x64 -c Release -o ./aot-out
 
       - name: Run AOT binary
-        run: ./aot-out/ZeroAlloc.Notify.AotSmoke
+        # GNU timeout exits 124 when the binary hangs, so a hang fails the step within two minutes.
+        run: timeout --kill-after=10s 120s ./aot-out/ZeroAlloc.Notify.AotSmoke
 
   api-compat:
     uses: ZeroAlloc-Net/.github/.github/workflows/api-compat.yml@main

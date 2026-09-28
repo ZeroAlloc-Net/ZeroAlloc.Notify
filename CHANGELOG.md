@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.8](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.7...v1.2.8) (2026-09-28)
+
+
+### Bug Fixes
+
+* mark released public api as shipped and automate the move ([#211](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/211)) ([bb27c9c](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/bb27c9cfdb3a571a4ebe90409f64761709051389))
+
+
+### Tests
+
+* cover value types in the AOT smoke ([#213](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/213)) ([eff654d](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/eff654d672f85e5f410cf10efe0347a2466512da))
+
 ## [1.2.7](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.6...v1.2.7) (2026-09-20)
 
 

@@ -27,10 +27,21 @@
     referencing only ZeroAlloc.Notify. The standalone ZeroAlloc.Notify.Generator
     package is still published for backwards compatibility, but new consumers
     should reference the main package only.
+
+    Bundle the generator DLL the build actually produced. Asking the generator project for its
+    target path, instead of hardcoding bin\$(Configuration)\netstandard2.0, follows any output
+    redirection such as artifacts-path. The hardcoded path silently bundled whatever stale DLL
+    sat in the repository's bin folder, at whatever version that DLL had been built with.
+    See ZeroAlloc-Net/.github#43.
   -->
   <Target Name="IncludeGeneratorInPackage" BeforeTargets="_GetPackageFiles">
+    <MSBuild Projects="..\ZeroAlloc.Notify.Generator\ZeroAlloc.Notify.Generator.csproj"
+             Targets="GetTargetPath"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;SelfContained">
+      <Output TaskParameter="TargetOutputs" ItemName="_ZeroAllocNotifyGeneratorAssembly" />
+    </MSBuild>
     <ItemGroup>
-      <None Include="$(MSBuildThisFileDirectory)..\ZeroAlloc.Notify.Generator\bin\$(Configuration)\netstandard2.0\ZeroAlloc.Notify.Generator.dll"
+      <None Include="@(_ZeroAllocNotifyGeneratorAssembly)"
             Pack="true"
             PackagePath="analyzers/dotnet/cs"
             Visible="false" />

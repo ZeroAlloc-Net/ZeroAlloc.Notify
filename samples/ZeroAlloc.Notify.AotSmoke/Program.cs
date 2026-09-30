@@ -113,6 +113,19 @@ if (Raised(changing, changed, 9, "Status", SmokeStatus.Idle, SmokeStatus.Running
 await m.SetStatusAsync(SmokeStatus.Running).ConfigureAwait(false);
 if (Raised(changing, changed, 9, "Status", SmokeStatus.Idle, SmokeStatus.Running) is { } e16) return Fail(e16);
 
+// ---- Generic class nested in another type ----
+var entry = new Catalog.Entry<int>();
+var entryChanged = 0;
+entry.PropertyChangedAsync += (args, ct) =>
+{
+    if (string.Equals(args.PropertyName, "Value", StringComparison.Ordinal) && args.NewValue is 7)
+        Interlocked.Increment(ref entryChanged);
+    return ValueTask.CompletedTask;
+};
+await entry.SetValueAsync(7).ConfigureAwait(false);
+if (entry.Value != 7) return Fail($"Catalog.Entry<int>.Value: expected 7, got {entry.Value}");
+if (entryChanged != 1) return Fail($"Catalog.Entry<int> PropertyChanged count expected 1, got {entryChanged}");
+
 Console.WriteLine("AOT smoke: PASS");
 return 0;
 

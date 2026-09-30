@@ -10,11 +10,50 @@ internal static class NotifyWriter
     {
         var sb = new StringBuilder();
         WriteFileHeader(sb, model);
-        WriteClassOpen(sb, model);
-        WriteEventMembers(sb, model);
-        WriteFieldMembers(sb, model);
-        sb.AppendLine("}");
+
+        // The containing types, outermost first, then the class itself. A top-level class has
+        // no containing types, so its output is written without extra indentation.
+        var containing = model.Declarations.Count - 1;
+        for (var level = 0; level < containing; level++)
+        {
+            sb.Append(Indent(level)).AppendLine(model.Declarations[level]);
+            sb.Append(Indent(level)).AppendLine("{");
+        }
+
+        var body = new StringBuilder();
+        WriteClassOpen(body, model);
+        WriteEventMembers(body, model);
+        WriteFieldMembers(body, model);
+        body.AppendLine("}");
+        AppendIndented(sb, body.ToString(), Indent(containing));
+
+        for (var level = containing - 1; level >= 0; level--)
+            sb.Append(Indent(level)).AppendLine("}");
         return sb.ToString();
+    }
+
+    private static string Indent(int level) => new(' ', level * 4);
+
+    /// <summary>Appends <paramref name="text"/> with every non-empty line prefixed by <paramref name="indent"/>.</summary>
+    private static void AppendIndented(StringBuilder sb, string text, string indent)
+    {
+        if (indent.Length == 0)
+        {
+            sb.Append(text);
+            return;
+        }
+
+        var start = 0;
+        while (start < text.Length)
+        {
+            var end = text.IndexOf('\n', start);
+            var next = end < 0 ? text.Length : end + 1;
+            // A blank line stays blank, whether it ends in \n or \r\n.
+            var blank = text[start] == '\n' || (text[start] == '\r' && start + 1 < text.Length && text[start + 1] == '\n');
+            if (!blank) sb.Append(indent);
+            sb.Append(text, start, next - start);
+            start = next;
+        }
     }
 
     private static void WriteFileHeader(StringBuilder sb, NotifyClassModel model)
@@ -45,7 +84,7 @@ internal static class NotifyWriter
         if (model.NotifyDataErrorInfo)     interfaces.Add("global::ZeroAlloc.Notify.INotifyDataErrorInfoAsync");
 
         var interfaceList = interfaces.Count > 0 ? " : " + string.Join(", ", interfaces) : "";
-        sb.AppendLine($"partial class {model.TypeName}{interfaceList}");
+        sb.AppendLine(model.Declarations[model.Declarations.Count - 1] + interfaceList);
         sb.AppendLine("{");
     }
 

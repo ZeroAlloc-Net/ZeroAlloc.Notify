@@ -10,23 +10,29 @@ namespace ZeroAlloc.Notify.Generator.Pipeline;
 internal static class HintNames
 {
     /// <summary>
-    /// The hint name of a type's generated file, unique within the compilation: the namespace,
-    /// then the containing types and the type joined by <c>+</c>, each with its arity, as in
-    /// <c>App.Outer`1+ViewModel.Notify.g.cs</c>. A type in the global namespace has no namespace
-    /// part.
+    /// The name of a type that is unique within the compilation: the namespace, then the
+    /// containing types and the type joined by <c>+</c>, each with its arity, as in
+    /// <c>App.Outer`1+ViewModel</c>. A type in the global namespace has no namespace part.
     /// </summary>
     /// <remarks>
     /// Nesting is written with <c>+</c> rather than a dot, so a type nested in <c>App.Outer</c>
     /// and a type at the top of namespace <c>App.Outer</c> never share a name. Roslyn compares
-    /// hint names ignoring case, so types whose names differ only in case still collide.
+    /// hint names ignoring case, so types whose names differ only in case would still collide;
+    /// the generator reports ZAN003 for the later one instead.
     /// </remarks>
-    public static string ForType(INamedTypeSymbol type)
+    public static string QualifiedName(INamedTypeSymbol type)
     {
         var sb = new StringBuilder();
         AppendNamespace(sb, type.ContainingNamespace);
         AppendTypeChain(sb, type);
-        return Sanitize(sb.ToString()) + ".Notify.g.cs";
+        return Sanitize(sb.ToString());
     }
+
+    /// <summary>
+    /// The hint name of the file generated for a Notify class, as in
+    /// <c>App.Outer`1+ViewModel.Notify.g.cs</c>.
+    /// </summary>
+    public static string ForNotify(string qualifiedName) => qualifiedName + ".Notify.g.cs";
 
     /// <summary>
     /// Keeps the characters an identifier, a namespace separator or an arity is written with,

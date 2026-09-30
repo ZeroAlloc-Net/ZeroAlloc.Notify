@@ -163,6 +163,28 @@ The source generator automatically creates:
 
 You apply the attributes; the generator creates the rest.
 
+### Nested and Generic Classes
+
+A class nested in another type, or a generic class, gets its members on the class itself. The
+generated file reopens every containing type, so each containing type has to be `partial`:
+
+```csharp
+public static partial class Orders
+{
+    [NotifyPropertyChangedAsync]
+    public partial class Entry<T>
+    {
+        [ObservableProperty]
+        private T? _value;
+    }
+}
+
+await new Orders.Entry<int>().SetValueAsync(7);
+```
+
+A nested class in a containing type that is not `partial` gets the warning
+[ZAN001](diagnostics.md#zan001) and nothing is generated for it.
+
 ## Next Steps
 
 - [Observable Properties](observable-properties.md) — Advanced property features

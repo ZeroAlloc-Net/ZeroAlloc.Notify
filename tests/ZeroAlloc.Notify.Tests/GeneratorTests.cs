@@ -77,6 +77,29 @@ public class GeneratorTests
             public partial class MyModel { }
             """);
 
+    [Fact]
+    public void NestedGenericClass_IsGeneratedIntoItsContainingTypes()
+        => Verify("""
+            using ZeroAlloc.Notify;
+            namespace MyApp;
+            public partial record struct Orders<TKey>
+            {
+                public static partial class Views
+                {
+                    [NotifyPropertyChangedAsync]
+                    [NotifyPropertyChangingAsync]
+                    public partial class OrderViewModel<@event>
+                    {
+                        [ObservableProperty]
+                        private TKey? _id;
+                        [ObservableProperty]
+                        [InvokeSequentially]
+                        private @event? _payload;
+                    }
+                }
+            }
+            """);
+
     private static void Verify(string source)
     {
         var compilation = CreateCompilation(source);

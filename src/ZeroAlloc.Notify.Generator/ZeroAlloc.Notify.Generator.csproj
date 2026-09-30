@@ -17,6 +17,15 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0" PrivateAssets="all" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Release tracking for the ZAN diagnostics: RS2000-RS2008 read these, so a changed
+         severity or category, or a removed ID, on a shipped rule fails the build. -->
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="ZeroAlloc.Notify.Tests" />
+  </ItemGroup>
   <!--
     Pack the generator DLL under analyzers/dotnet/cs. Without this, dotnet pack falls back
     to the default lib/<tfm>/ layout and Roslyn does not load the generator at all.

@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.9](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.8...v1.2.9) (2026-09-30)
+
+
+### Bug Fixes
+
+* compare the class model by value so unchanged classes are not regenerated on every edit ([0ba0ac1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/0ba0ac1780fa744e65109148c1bb7cb63d208b75))
+* generate nested and generic classes into the real class ([0ba0ac1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/0ba0ac1780fa744e65109148c1bb7cb63d208b75))
+* name generated files after the class's namespace, containing types and arity, and stop merging same-named classes ([0ba0ac1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/0ba0ac1780fa744e65109148c1bb7cb63d208b75))
+* report classes whose names differ only in case instead of stopping the generator ([0ba0ac1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/0ba0ac1780fa744e65109148c1bb7cb63d208b75))
+* warn when Notify attributes are used where nothing can be generated ([#222](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/222)) ([035f6fc](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/035f6fcaa865a348b1974da5e3b0210a0db20642)), closes [#220](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/220)
+
 ## [1.2.8](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.7...v1.2.8) (2026-09-28)
 
 

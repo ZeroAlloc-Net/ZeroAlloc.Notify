@@ -34,6 +34,17 @@ public sealed class NotifyGenerator : IIncrementalGenerator
             .WithTrackingName(ModelsTrackingName);
 
         context.RegisterSourceOutput(all, Emit);
+
+        // ZAN006: [ObservableProperty] fields whose class has no class-level Notify attribute.
+        var orphanFields = context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                "ZeroAlloc.Notify.ObservablePropertyAttribute",
+                static (node, _) => node is Microsoft.CodeAnalysis.CSharp.Syntax.VariableDeclaratorSyntax,
+                NotifyParser.CheckObservableField)
+            .Where(static d => d is not null)
+            .Select(static (d, _) => d!);
+
+        context.RegisterSourceOutput(orphanFields, static (ctx, diagnostic) => ctx.ReportDiagnostic(diagnostic.ToDiagnostic()));
     }
 
     /// <summary>

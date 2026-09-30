@@ -9,6 +9,9 @@ project is still generated.
 | [ZAN001](#zan001) | Warning | Containing type of a Notify class is not partial |
 | [ZAN002](#zan002) | Error | File-local Notify class is not generated |
 | [ZAN003](#zan003) | Error | Class name differs only in case from another Notify class |
+| [ZAN004](#zan004) | Warning | Notify class is not partial |
+| [ZAN005](#zan005) | Warning | Notify attributes are not supported on records |
+| [ZAN006](#zan006) | Warning | `[ObservableProperty]` field in a class without a Notify attribute |
 
 ## ZAN001
 
@@ -82,6 +85,72 @@ namespace App;
 ```
 
 Fix it by renaming one of the classes, or by moving it to another namespace or containing type.
+
+## ZAN004
+
+**Notify class is not partial.**
+
+The generator adds the events, properties and setters to the class in a separate file, which
+only a `partial` class allows. A class with a Notify attribute that is not `partial` gets the
+warning ZAN004, and nothing is generated for it.
+
+```csharp
+[NotifyPropertyChangedAsync]
+public class OrderViewModel               // ZAN004
+{
+    [ObservableProperty] private string _status = "";
+}
+```
+
+Fix it by declaring the class `partial`:
+
+```csharp
+[NotifyPropertyChangedAsync]
+public partial class OrderViewModel
+{
+    [ObservableProperty] private string _status = "";
+}
+```
+
+## ZAN005
+
+**Notify attributes are not supported on records.**
+
+The generator only supports classes. A `record` with a Notify attribute gets the warning ZAN005,
+and nothing is generated for it, whether or not it is `partial`. A `record struct` cannot carry
+the attributes at all; the compiler reports CS0592.
+
+```csharp
+[NotifyPropertyChangedAsync]
+public partial record OrderViewModel      // ZAN005
+{
+    [ObservableProperty] private string _status = "";
+}
+```
+
+Fix it by making the type a `partial class`.
+
+## ZAN006
+
+**`[ObservableProperty]` field in a class without a Notify attribute.**
+
+The generator reads `[ObservableProperty]` fields only in a class that carries one of the
+class-level Notify attributes: `[NotifyPropertyChangedAsync]`, `[NotifyPropertyChangingAsync]`,
+`[NotifyCollectionChangedAsync]` or `[NotifyDataErrorInfoAsync]`. In any other class, each such
+field gets the warning ZAN006 on its name, and no property or setter is generated for it.
+`[InvokeSequentially]` alone does not count.
+
+```csharp
+public partial class OrderViewModel
+{
+    [ObservableProperty] private string _status = "";   // ZAN006
+}
+```
+
+Fix it by adding the Notify attribute for the events you want, usually
+`[NotifyPropertyChangedAsync]`, or remove `[ObservableProperty]`.
+
+When a class gets ZAN004 or ZAN005, its fields do not also get ZAN006.
 
 ## Next Steps
 

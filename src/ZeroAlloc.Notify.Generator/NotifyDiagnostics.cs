@@ -49,4 +49,42 @@ internal static class NotifyDiagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         helpLinkUri: HelpLink + "zan003");
+
+    /// <summary>
+    /// A class with a Notify attribute that is not <c>partial</c>. The generated file can only add
+    /// members to a partial class.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ClassNotPartial = new(
+        id: "ZAN004",
+        title: "Notify class is not partial",
+        messageFormat: "The notification members of class '{0}' are not generated because it is not partial",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        helpLinkUri: HelpLink + "zan004");
+
+    /// <summary>
+    /// A record with a Notify attribute. The generator only supports classes.
+    /// </summary>
+    public static readonly DiagnosticDescriptor RecordNotSupported = new(
+        id: "ZAN005",
+        title: "Notify attributes are not supported on records",
+        messageFormat: "The notification members of record '{0}' are not generated because Notify attributes are not supported on records",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        helpLinkUri: HelpLink + "zan005");
+
+    /// <summary>
+    /// An <c>[ObservableProperty]</c> field in a class without a class-level Notify attribute. The
+    /// generator only reads the fields of a class that carries one.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ObservablePropertyWithoutNotifyAttribute = new(
+        id: "ZAN006",
+        title: "[ObservableProperty] field in a class without a Notify attribute",
+        messageFormat: "No property is generated for field '{0}' because its class '{1}' has no Notify attribute such as [NotifyPropertyChangedAsync]",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        helpLinkUri: HelpLink + "zan006");
 }

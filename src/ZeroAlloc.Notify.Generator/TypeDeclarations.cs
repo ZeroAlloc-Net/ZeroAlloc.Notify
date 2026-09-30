@@ -72,7 +72,8 @@ internal static class TypeDeclarations
         return outermost;
     }
 
-    private static bool IsPartial(INamedTypeSymbol type, CancellationToken ct) =>
+    /// <summary>Whether <paramref name="type"/> is declared <c>partial</c>.</summary>
+    public static bool IsPartial(INamedTypeSymbol type, CancellationToken ct) =>
         type.DeclaringSyntaxReferences.Any(r =>
             r.GetSyntax(ct) is TypeDeclarationSyntax declaration &&
             declaration.Modifiers.Any(static m => m.IsKind(SyntaxKind.PartialKeyword)));

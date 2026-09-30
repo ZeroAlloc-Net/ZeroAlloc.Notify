@@ -39,7 +39,7 @@ public sealed class NotifyGenerator : IIncrementalGenerator
 
     private static void AddIfNew(HashSet<string> seen, List<NotifyClassModel> result, NotifyClassModel m)
     {
-        if (seen.Add($"{m.Namespace}:{m.TypeName}"))
+        if (seen.Add(m.Identity))
             result.Add(m);
     }
 
@@ -53,9 +53,6 @@ public sealed class NotifyGenerator : IIncrementalGenerator
     private static void Emit(SourceProductionContext ctx, NotifyClassModel model)
     {
         var source = NotifyWriter.Write(model);
-        var hint = string.IsNullOrEmpty(model.Namespace)
-            ? $"{model.TypeName}.Notify.g.cs"
-            : $"{model.Namespace}_{model.TypeName}.Notify.g.cs";
-        ctx.AddSource(hint, source);
+        ctx.AddSource(model.HintName, source);
     }
 }

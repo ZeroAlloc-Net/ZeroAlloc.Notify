@@ -43,7 +43,10 @@ internal static class NotifyParser
             fields.Add(new ObservableFieldModel(f.Name, propName, f.Type.ToDisplayString(), sequential));
         }
 
-        return new NotifyClassModel(ns, type.Name, notifyChanged, notifyChanging, notifyCollection, notifyErrors, classSequential, fields);
+        return new NotifyClassModel(
+            type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+            HintNames.ForType(type),
+            ns, type.Name, notifyChanged, notifyChanging, notifyCollection, notifyErrors, classSequential, fields);
     }
 
     private static bool HasAttr(System.Collections.Immutable.ImmutableArray<AttributeData> attrs, string fqn)

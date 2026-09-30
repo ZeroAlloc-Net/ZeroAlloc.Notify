@@ -21,6 +21,9 @@ public class IncrementalCachingTests
     [InlineData("[NotifyPropertyChangedAsync] public partial class Foo<T> { [ObservableProperty] private T? _value; }", "Other")]
     // ZAN001.
     [InlineData("public class Outer { [NotifyPropertyChangedAsync] public partial class Foo { [ObservableProperty] private int _count; } }", "Other")]
+    // ZAN004 and ZAN005, whose warnings keep their location.
+    [InlineData("[NotifyPropertyChangedAsync] public class Foo { [ObservableProperty] private int _count; }", "Other")]
+    [InlineData("[NotifyPropertyChangedAsync] public partial record Foo { [ObservableProperty] private int _count; }", "Other")]
     // ZAN003 against N.foo in A.cs, which sorts first, attached anew on every run.
     [InlineData(Observable, "foo")]
     public void EditToAnotherFile_LeavesTheModelUnchanged(string declaration, string otherName)

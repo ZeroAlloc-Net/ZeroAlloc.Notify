@@ -81,7 +81,7 @@ See [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob
 | [Collection Changes](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/collection-changes.md) | Observable collections with async event dispatch |
 | [Validation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/validation.md) | `INotifyDataErrorInfoAsync` with async error handling |
 | [Performance](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md) | Zero-alloc internals, detailed benchmarks, Native AOT |
-| [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/diagnostics.md) | ZAN001–ZAN003 source generator warnings and errors |
+| [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/diagnostics.md) | ZAN001–ZAN006 source generator warnings and errors |
 | [Advanced Patterns](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/advanced-patterns.md) | Cancellation, scoped bindings, parallel handlers |
 | [Testing](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/testing.md) | Unit-testing observable models and notification flows |
 

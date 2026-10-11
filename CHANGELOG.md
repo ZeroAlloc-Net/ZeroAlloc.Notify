@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.10](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.9...v1.2.10) (2026-10-11)
+
+
+### Performance
+
+* skip event args allocation when a change has no subscribers ([#238](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/238)) ([d0e3c32](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/d0e3c32361c06b661f3d6d25cf75792096ec276e)), closes [#236](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/236)
+
 ## [1.2.9](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.8...v1.2.9) (2026-09-30)
 
 

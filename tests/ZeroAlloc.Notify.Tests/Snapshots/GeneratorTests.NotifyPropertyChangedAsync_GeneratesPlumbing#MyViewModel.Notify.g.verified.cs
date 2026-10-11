@@ -21,6 +21,10 @@ partial class MyViewModel : global::ZeroAlloc.Notify.INotifyPropertyChangedAsync
     #pragma warning restore MA0046
 
     protected global::System.Threading.Tasks.ValueTask RaisePropertyChangedAsync(string propertyName, object? oldValue, object? newValue, global::System.Threading.CancellationToken ct = default)
-        => _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(propertyName, oldValue, newValue), ct);
+    {
+        var __handler = _propertyChangedAsync;
+        if (__handler.Count == 0) return default;
+        return __handler.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(propertyName, oldValue, newValue), ct);
+    }
 
 }

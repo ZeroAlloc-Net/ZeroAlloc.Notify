@@ -21,7 +21,11 @@ partial class MyViewModel : global::ZeroAlloc.Notify.INotifyPropertyChangedAsync
     #pragma warning restore MA0046
 
     protected global::System.Threading.Tasks.ValueTask RaisePropertyChangedAsync(string propertyName, object? oldValue, object? newValue, global::System.Threading.CancellationToken ct = default)
-        => _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(propertyName, oldValue, newValue), ct);
+    {
+        var __handler = _propertyChangedAsync;
+        if (__handler.Count == 0) return default;
+        return __handler.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(propertyName, oldValue, newValue), ct);
+    }
 
     private global::ZeroAlloc.AsyncEvents.AsyncEventHandler<global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs> _propertyChangingAsync = new(global::ZeroAlloc.AsyncEvents.InvokeMode.Parallel);
 
@@ -34,7 +38,11 @@ partial class MyViewModel : global::ZeroAlloc.Notify.INotifyPropertyChangedAsync
     #pragma warning restore MA0046
 
     protected global::System.Threading.Tasks.ValueTask RaisePropertyChangingAsync(string propertyName, object? oldValue, object? newValue, global::System.Threading.CancellationToken ct = default)
-        => _propertyChangingAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(propertyName, oldValue, newValue), ct);
+    {
+        var __handler = _propertyChangingAsync;
+        if (__handler.Count == 0) return default;
+        return __handler.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(propertyName, oldValue, newValue), ct);
+    }
 
     public string Name
     {
@@ -46,9 +54,13 @@ partial class MyViewModel : global::ZeroAlloc.Notify.INotifyPropertyChangedAsync
     {
         if (global::System.Collections.Generic.EqualityComparer<string>.Default.Equals(_name, value)) return;
         var __old = _name;
-        await RaisePropertyChangingAsync(nameof(Name), __old, value, ct).ConfigureAwait(false);
+        var __changing = _propertyChangingAsync;
+        if (__changing.Count != 0)
+            await __changing.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(nameof(Name), __old, value), ct).ConfigureAwait(false);
         _name = value;
-        await RaisePropertyChangedAsync(nameof(Name), __old, value, ct).ConfigureAwait(false);
+        var __changed = _propertyChangedAsync;
+        if (__changed.Count != 0)
+            await __changed.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(nameof(Name), __old, value), ct).ConfigureAwait(false);
     }
 
     public int Count
@@ -61,9 +73,13 @@ partial class MyViewModel : global::ZeroAlloc.Notify.INotifyPropertyChangedAsync
     {
         if (global::System.Collections.Generic.EqualityComparer<int>.Default.Equals(_count, value)) return;
         var __old = _count;
-        await RaisePropertyChangingAsync(nameof(Count), __old, value, ct).ConfigureAwait(false);
+        var __changing = _propertyChangingAsync;
+        if (__changing.Count != 0)
+            await __changing.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(nameof(Count), __old, value), ct).ConfigureAwait(false);
         _count = value;
-        await RaisePropertyChangedAsync(nameof(Count), __old, value, ct).ConfigureAwait(false);
+        var __changed = _propertyChangedAsync;
+        if (__changed.Count != 0)
+            await __changed.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(nameof(Count), __old, value), ct).ConfigureAwait(false);
     }
 
 }

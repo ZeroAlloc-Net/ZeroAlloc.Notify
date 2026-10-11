@@ -21,6 +21,10 @@ partial class MyModel : global::ZeroAlloc.Notify.INotifyDataErrorInfoAsync
     #pragma warning restore MA0046
 
     protected global::System.Threading.Tasks.ValueTask RaiseErrorsChangedAsync(string? propertyName, global::System.Threading.CancellationToken ct = default)
-        => _errorsChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncErrorsChangedEventArgs(propertyName), ct);
+    {
+        var __handler = _errorsChangedAsync;
+        if (__handler.Count == 0) return default;
+        return __handler.InvokeAsync(new global::ZeroAlloc.Notify.AsyncErrorsChangedEventArgs(propertyName), ct);
+    }
 
 }

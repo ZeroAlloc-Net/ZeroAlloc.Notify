@@ -21,6 +21,10 @@ partial class MyCollection : global::ZeroAlloc.Notify.INotifyCollectionChangedAs
     #pragma warning restore MA0046
 
     protected global::System.Threading.Tasks.ValueTask RaiseCollectionChangedAsync(global::ZeroAlloc.Notify.AsyncCollectionChangedEventArgs args, global::System.Threading.CancellationToken ct = default)
-        => _collectionChangedAsync.InvokeAsync(args, ct);
+    {
+        var __handler = _collectionChangedAsync;
+        if (__handler.Count == 0) return default;
+        return __handler.InvokeAsync(args, ct);
+    }
 
 }

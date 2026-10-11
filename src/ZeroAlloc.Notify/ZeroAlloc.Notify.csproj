@@ -1,10 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <!-- netstandard2.0 for broad compat; net8/net10 are LTS-only concrete targets, net9 STS omitted
+         by policy. The concrete targets run the AOT, trim and single-file analyzers. -->
+    <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
     <PackageId>ZeroAlloc.Notify</PackageId>
-    <Description>Source-generated async INotifyPropertyChanged, INotifyPropertyChanging, INotifyCollectionChanged and INotifyDataErrorInfo for .NET. Zero-allocation, ValueTask-based, no fire-and-forget.</Description>
+    <Description>Source-generated async INotifyPropertyChanged, INotifyPropertyChanging, INotifyCollectionChanged and INotifyDataErrorInfo for .NET. ValueTask-based, no fire-and-forget; a change with no subscribers allocates nothing.</Description>
     <Version>0.0.0-local</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IsAotCompatible Condition="'$(TargetFramework)' != 'netstandard2.0'">true</IsAotCompatible>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ZeroAlloc.AsyncEvents" Version="1.1.7" />

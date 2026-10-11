@@ -47,7 +47,10 @@ public class NotifyComparisonBenchmarks
     public void Fody_SetName()
         => _fody.Name = string.Equals(_fody.Name, "a", StringComparison.Ordinal) ? "b" : "a";
 
-    /// <summary>ZeroAlloc.Notify — fully awaitable ValueTask, zero allocation.</summary>
+    /// <summary>
+    /// ZeroAlloc.Notify, fully awaitable ValueTask. Allocates the PropertyChanged args object;
+    /// PropertyChanging has no subscribers here, so its args are never created.
+    /// </summary>
     [Benchmark]
     public ValueTask ZeroAlloc_SetNameAsync()
         => _async.SetNameAsync(string.Equals(_async.Name, "a", StringComparison.Ordinal) ? "b" : "a");

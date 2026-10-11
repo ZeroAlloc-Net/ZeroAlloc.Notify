@@ -99,28 +99,28 @@ internal static class NotifyWriter
                 "global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs",
                 "_propertyChangedAsync", "PropertyChangedAsync",
                 "    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangedAsync(string propertyName, object? oldValue, object? newValue, global::System.Threading.CancellationToken ct = default)",
-                "        => _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(propertyName, oldValue, newValue), ct);");
+                "new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(propertyName, oldValue, newValue)");
 
         if (model.NotifyPropertyChanging)
             WriteEventMember(sb, mode,
                 "global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs",
                 "_propertyChangingAsync", "PropertyChangingAsync",
                 "    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangingAsync(string propertyName, object? oldValue, object? newValue, global::System.Threading.CancellationToken ct = default)",
-                "        => _propertyChangingAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(propertyName, oldValue, newValue), ct);");
+                "new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(propertyName, oldValue, newValue)");
 
         if (model.NotifyCollectionChanged)
             WriteEventMember(sb, mode,
                 "global::ZeroAlloc.Notify.AsyncCollectionChangedEventArgs",
                 "_collectionChangedAsync", "CollectionChangedAsync",
                 "    protected global::System.Threading.Tasks.ValueTask RaiseCollectionChangedAsync(global::ZeroAlloc.Notify.AsyncCollectionChangedEventArgs args, global::System.Threading.CancellationToken ct = default)",
-                "        => _collectionChangedAsync.InvokeAsync(args, ct);");
+                "args");
 
         if (model.NotifyDataErrorInfo)
             WriteEventMember(sb, mode,
                 "global::ZeroAlloc.Notify.AsyncErrorsChangedEventArgs",
                 "_errorsChangedAsync", "ErrorsChangedAsync",
                 "    protected global::System.Threading.Tasks.ValueTask RaiseErrorsChangedAsync(string? propertyName, global::System.Threading.CancellationToken ct = default)",
-                "        => _errorsChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncErrorsChangedEventArgs(propertyName), ct);");
+                "new global::ZeroAlloc.Notify.AsyncErrorsChangedEventArgs(propertyName)");
     }
 
     private static void WriteEventMember(
@@ -130,7 +130,7 @@ internal static class NotifyWriter
         string fieldName,
         string eventName,
         string raiseSignature,
-        string raiseBody)
+        string argsExpression)
     {
         sb.AppendLine($"    private global::ZeroAlloc.AsyncEvents.AsyncEventHandler<{argsType}> {fieldName} = new({mode});");
         sb.AppendLine();
@@ -142,8 +142,14 @@ internal static class NotifyWriter
         sb.AppendLine("    }");
         sb.AppendLine("    #pragma warning restore MA0046");
         sb.AppendLine();
+        // With no subscribers the args object is never created. See WriteSetterRaise for why
+        // the handler is copied to a local before the check.
         sb.AppendLine(raiseSignature);
-        sb.AppendLine(raiseBody);
+        sb.AppendLine("    {");
+        sb.AppendLine($"        var __handler = {fieldName};");
+        sb.AppendLine("        if (__handler.Count == 0) return default;");
+        sb.AppendLine($"        return __handler.InvokeAsync({argsExpression}, ct);");
+        sb.AppendLine("    }");
         sb.AppendLine();
     }
 
@@ -166,21 +172,38 @@ internal static class NotifyWriter
         sb.AppendLine($"        if (global::System.Collections.Generic.EqualityComparer<{field.TypeName}>.Default.Equals({field.FieldName}, value)) return;");
         sb.AppendLine($"        var __old = {field.FieldName};");
         if (model.NotifyPropertyChanging)
-        {
-            if (field.Sequential && !model.ClassLevelSequential)
-                sb.AppendLine($"        await _propertyChangingAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(nameof({field.PropertyName}), __old, value), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);");
-            else
-                sb.AppendLine($"        await RaisePropertyChangingAsync(nameof({field.PropertyName}), __old, value, ct).ConfigureAwait(false);");
-        }
+            WriteSetterRaise(sb, model, field, "_propertyChangingAsync", "__changing", "global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs");
         sb.AppendLine($"        {field.FieldName} = value;");
         if (model.NotifyPropertyChanged)
-        {
-            if (field.Sequential && !model.ClassLevelSequential)
-                sb.AppendLine($"        await _propertyChangedAsync.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(nameof({field.PropertyName}), __old, value), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);");
-            else
-                sb.AppendLine($"        await RaisePropertyChangedAsync(nameof({field.PropertyName}), __old, value, ct).ConfigureAwait(false);");
-        }
+            WriteSetterRaise(sb, model, field, "_propertyChangedAsync", "__changed", "global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs");
         sb.AppendLine("    }");
         sb.AppendLine();
+    }
+
+    /// <summary>
+    /// Raises a change event from a setter. The subscriber check comes first, so with nobody
+    /// listening neither the args object nor the boxed old and new values are allocated.
+    /// <para>
+    /// The handler is copied to a local once and both the check and the invoke use that copy,
+    /// the same single read the event raise in AsyncEventHandler does. Registration swaps the
+    /// callback array atomically, so a race only shifts which side of the raise a concurrent
+    /// subscriber lands on: one removed after the check gets no call and the args go unused,
+    /// one added after the check is treated as having subscribed after the raise.
+    /// </para>
+    /// </summary>
+    private static void WriteSetterRaise(
+        StringBuilder sb,
+        NotifyClassModel model,
+        ObservableFieldModel field,
+        string fieldName,
+        string localName,
+        string argsType)
+    {
+        var modeOverride = field.Sequential && !model.ClassLevelSequential
+            ? "global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, "
+            : "";
+        sb.AppendLine($"        var {localName} = {fieldName};");
+        sb.AppendLine($"        if ({localName}.Count != 0)");
+        sb.AppendLine($"            await {localName}.InvokeAsync(new {argsType}(nameof({field.PropertyName}), __old, value), {modeOverride}ct).ConfigureAwait(false);");
     }
 }

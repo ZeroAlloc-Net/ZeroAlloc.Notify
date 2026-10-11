@@ -47,18 +47,18 @@ await vm.SetAgeAsync(30);
 
 ## Performance
 
-ZeroAlloc.Notify provides **async-first, fully awaitable handler dispatch** — the only framework in this comparison where `await vm.SetNameAsync(...)` truly awaits all handlers. Refreshed benchmarks (.NET 10.0.7, i9-12900HK, BenchmarkDotNet v0.15.8, 5 attached handlers):
+ZeroAlloc.Notify provides **async-first, fully awaitable handler dispatch** — the only framework in this comparison where `await vm.SetNameAsync(...)` truly awaits all handlers. Refreshed benchmarks (.NET 10.0.12, i9-12900HK, BenchmarkDotNet v0.15.8, 5 attached handlers):
 
 | Library | Time | Allocated | Async support |
 |---|---:|---:|:---:|
-| Manual `INotifyPropertyChanged` (baseline) | 33.6 ns | 24 B | ❌ |
-| PropertyChanged.Fody | **30.2 ns** | **0 B** | ❌ |
-| CommunityToolkit.Mvvm | 55.2 ns | 0 B | ❌ |
-| **ZeroAlloc.Notify** | **124.7 ns** | **80 B** | ✅ |
+| Manual `INotifyPropertyChanged` (baseline) | 35.2 ns | 24 B | ❌ |
+| PropertyChanged.Fody | **29.0 ns** | **0 B** | ❌ |
+| CommunityToolkit.Mvvm | 50.2 ns | 0 B | ❌ |
+| **ZeroAlloc.Notify** | **112.8 ns** | **40 B** | ✅ |
 
-**Honest framing**: ZA.Notify is the slowest of the four and the only one that allocates — the 80 B is the `ValueTask` state machine for fan-out to async handlers. **For pure-sync view models, Fody is the right choice** (fastest, 0 B). ZA.Notify is the only library here that supports async handlers; the trade-off is the cost of that capability. At 124.7 ns / 80 B per setter, it still scales to ~8M property changes per second per thread.
+**Honest framing**: ZA.Notify is the slowest of the four and allocates. The 40 B is the event args object handed to the handlers: a `sealed class` carrying the old and new value as `object?`, so a value-type property also boxes both values, 88 B in all for an `int`. A change with no subscribers allocates nothing, because the args are created only when someone listens. An allocation-free args shape is planned for the next major version, see [#237](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/237). **For pure-sync view models, Fody is the right choice** (fastest, 0 B). ZA.Notify is the only library here that supports async handlers; the trade-off is the cost of that capability. At 112.8 ns / 40 B per setter, it still scales to ~8.8M property changes per second per thread.
 
-See [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md) for detailed benchmark results and zero-allocation design explanation.
+See [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md) for detailed benchmark results and where each allocation comes from.
 
 ## Features
 

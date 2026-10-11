@@ -8,4 +8,7 @@ public partial class AsyncViewModel
 {
     [ObservableProperty]
     private string _name = "";
+
+    [ObservableProperty]
+    private int _count;
 }

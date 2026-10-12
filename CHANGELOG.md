@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.11](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.10...v1.2.11) (2026-10-12)
+
+
+### Refactoring
+
+* remove dead HLQ003 pragma from InterfaceTests ([#242](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/242)) ([f520007](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/f5200070945ea1c14629967ec982c549affb239d))
+
 ## [1.2.10](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.9...v1.2.10) (2026-10-11)
 
 

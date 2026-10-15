@@ -2,11 +2,11 @@
 
 [![NuGet](https://img.shields.io/nuget/v/ZeroAlloc.Notify.svg)](https://www.nuget.org/packages/ZeroAlloc.Notify)
 [![Build](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/actions/workflows/ci.yml/badge.svg)](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/LICENSE)
 [![AOT](https://img.shields.io/badge/AOT--Compatible-passing-brightgreen)](https://learn.microsoft.com/dotnet/core/deploying/native-aot/)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-ZeroAlloc.Notify is a source-generated notification library for .NET 8 and .NET 10. It provides async-first property and collection change notifications without reflection or dynamic dispatch. The Roslyn source generator eliminates runtime overhead by wiring all dispatch at compile time — no virtual dispatch, fully awaitable handlers.
+ZeroAlloc.Notify is a source-generated notification library for .NET 8, .NET 10 and .NET Standard 2.0. It provides async-first property and collection change notifications without reflection or dynamic dispatch. The Roslyn source generator eliminates runtime overhead by wiring all dispatch at compile time — no virtual dispatch, fully awaitable handlers.
 
 ## Install
 
@@ -21,16 +21,7 @@ dotnet add package ZeroAlloc.Notify
 ## Quick Example
 
 ```csharp
-// 1. Define a ViewModel with observable properties
-[NotifyPropertyChangedAsync]
-public partial class UserViewModel
-{
-    [ObservableProperty]
-    private string _name = "";
-
-    [ObservableProperty]
-    private int _age;
-}
+using ZeroAlloc.Notify;
 
 // 2. Subscribe to async notifications
 var vm = new UserViewModel();
@@ -43,6 +34,17 @@ vm.PropertyChangedAsync += async (args, ct) =>
 // 3. Set properties — fully awaitable
 await vm.SetNameAsync("Alice");
 await vm.SetAgeAsync(30);
+
+// 1. Define a ViewModel with observable properties
+[NotifyPropertyChangedAsync]
+public partial class UserViewModel
+{
+    [ObservableProperty]
+    private string _name = "";
+
+    [ObservableProperty]
+    private int _age;
+}
 ```
 
 ## Performance
@@ -87,12 +89,8 @@ See [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob
 
 ## Examples
 
-See the [samples](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/tree/main/samples/) directory for complete working examples:
-- WPF MVVM application
-- ASP.NET Core data binding
-- Console property notifications
-- Collection change handling
+[`samples/ZeroAlloc.Notify.AotSmoke`](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/tree/main/samples/ZeroAlloc.Notify.AotSmoke) is a runnable console app that exercises the generated setters and async property events; CI publishes it with Native AOT and runs it. For collection changes and validation, the [Collection Changes](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/collection-changes.md) and [Validation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/validation.md) guides have complete examples.
 
 ## License
 
-MIT
+MIT. See [LICENSE](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/LICENSE).

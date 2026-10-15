@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.12](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.11...v1.2.12) (2026-10-15)
+
+
+### Documentation
+
+* replace stub samples and fix the README example ([#247](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/247)) ([193c7b5](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/193c7b5e7a86d17f6fd1510ef6a9f111649bf147))
+
 ## [1.2.11](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.10...v1.2.11) (2026-10-12)
 
 

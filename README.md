@@ -6,91 +6,76 @@
 [![AOT](https://img.shields.io/badge/AOT--Compatible-passing-brightgreen)](https://learn.microsoft.com/dotnet/core/deploying/native-aot/)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-ZeroAlloc.Notify is a source-generated notification library for .NET 8, .NET 10 and .NET Standard 2.0. It provides async-first property and collection change notifications without reflection or dynamic dispatch. The Roslyn source generator eliminates runtime overhead by wiring all dispatch at compile time — no virtual dispatch, fully awaitable handlers.
+Source-generated, awaitable `INotifyPropertyChanged` for .NET: `await vm.SetNameAsync("Alice")` returns only after every async handler has finished, with no reflection and NativeAOT support.
+
+## Why ZeroAlloc.Notify
+
+- **Setters you can `await`.** Async validation, saving or coordinated state changes complete before the setter returns. CommunityToolkit.Mvvm and PropertyChanged.Fody only offer synchronous notifications.
+- **0 B when nobody listens.** The generated setter creates event args only when there are subscribers; tests assert 0 B for reference-type and value-type properties. With subscribers, a change costs its args object, 40 B, plus a box per value-type value; tests pin both figures.
+- **Works under NativeAOT and trimming.** All plumbing is generated at compile time; CI publishes and runs a NativeAOT sample on every build.
+- **Compile-time diagnostics.** A class that is not `partial`, a record, or a stray `[ObservableProperty]` is reported by the build, not discovered at runtime.
 
 ## Install
 
-The source generator is bundled into the main package — a single `PackageReference` is all you need:
-
-```shell
+```bash
 dotnet add package ZeroAlloc.Notify
 ```
 
-> The standalone `ZeroAlloc.Notify.Generator` package is still published for backwards compatibility with existing direct PackageReferences, but new consumers should reference only `ZeroAlloc.Notify`.
+The source generator ships inside the package.
 
-## Quick Example
+## Quick start
 
 ```csharp
 using ZeroAlloc.Notify;
 
-// 2. Subscribe to async notifications
-var vm = new UserViewModel();
-vm.PropertyChangedAsync += async (args, ct) =>
+var user = new UserViewModel();
+
+user.PropertyChangedAsync += async (args, ct) =>
 {
-    Console.WriteLine($"Property '{args.PropertyName}' changed from {args.OldValue} to {args.NewValue}");
-    await Task.Delay(100, ct); // Non-blocking handler execution
+    await Task.Delay(100, ct);  // e.g. save to a server
+    Console.WriteLine($"{args.PropertyName}: {args.OldValue} -> {args.NewValue}, saved");
 };
 
-// 3. Set properties — fully awaitable
-await vm.SetNameAsync("Alice");
-await vm.SetAgeAsync(30);
+await user.SetNameAsync("Alice");  // returns after the handler has saved
+await user.SetAgeAsync(30);
 
-// 1. Define a ViewModel with observable properties
 [NotifyPropertyChangedAsync]
 public partial class UserViewModel
 {
-    [ObservableProperty]
-    private string _name = "";
-
-    [ObservableProperty]
-    private int _age;
+    [ObservableProperty] private string _name = "";
+    [ObservableProperty] private int _age;
 }
 ```
 
+The generator writes the `Name` and `Age` properties, the `SetNameAsync` and `SetAgeAsync` setters and the `PropertyChangedAsync` event.
+
+## What you get
+
+- **Async property notifications**, before and after a change: `[NotifyPropertyChangedAsync]` and `[NotifyPropertyChangingAsync]`. [Observable properties](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/observable-properties.md)
+- **Async collection notifications** with `[NotifyCollectionChangedAsync]`. [Collection changes](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/collection-changes.md)
+- **Async validation** through `INotifyDataErrorInfoAsync`. [Validation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/validation.md)
+- **Parallel handlers by default, sequential on request** with `[InvokeSequentially]`, and a `CancellationToken` on every setter. [Async notifications](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/async-notifications.md)
+- **Build-time checks**, ZAN001 to ZAN006. [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/diagnostics.md)
+- **Targets** `netstandard2.0`, `net8.0` and `net10.0`.
+- **Built on [ZeroAlloc.AsyncEvents](https://github.com/ZeroAlloc-Net/ZeroAlloc.AsyncEvents)**, the async event primitive behind every handler.
+
 ## Performance
 
-ZeroAlloc.Notify provides **async-first, fully awaitable handler dispatch** — the only framework in this comparison where `await vm.SetNameAsync(...)` truly awaits all handlers. Refreshed benchmarks (.NET 10.0.12, i9-12900HK, BenchmarkDotNet v0.15.8, 5 attached handlers):
+One property change with five handlers attached. .NET 10, BenchmarkDotNet, same run; the ratio is against a hand-written `INotifyPropertyChanged`, computed from the published means.
 
-| Library | Time | Allocated | Async support |
+| Library | Ratio | Allocated | Async handlers |
 |---|---:|---:|:---:|
-| Manual `INotifyPropertyChanged` (baseline) | 35.2 ns | 24 B | ❌ |
-| PropertyChanged.Fody | **29.0 ns** | **0 B** | ❌ |
-| CommunityToolkit.Mvvm | 50.2 ns | 0 B | ❌ |
-| **ZeroAlloc.Notify** | **112.8 ns** | **40 B** | ✅ |
+| Manual `INotifyPropertyChanged` | 1.00 | 24 B | no |
+| PropertyChanged.Fody | 0.82 | 0 B | no |
+| CommunityToolkit.Mvvm | 1.43 | 0 B | no |
+| **ZeroAlloc.Notify** | **3.20** | **40 B** | **yes** |
 
-**Honest framing**: ZA.Notify is the slowest of the four and allocates. The 40 B is the event args object handed to the handlers: a `sealed class` carrying the old and new value as `object?`, so a value-type property also boxes both values, 88 B in all for an `int`. A change with no subscribers allocates nothing, because the args are created only when someone listens. An allocation-free args shape is planned for the next major version, see [#237](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/237). **For pure-sync view models, Fody is the right choice** (fastest, 0 B). ZA.Notify is the only library here that supports async handlers; the trade-off is the cost of that capability. At 112.8 ns / 40 B per setter, it still scales to ~8.8M property changes per second per thread.
+Awaitable handlers have a cost: Notify is the slowest of the four and allocates its args object when someone listens. For purely synchronous view models, Fody is the faster choice. Allocation breakdown, design notes and full numbers: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md).
 
-See [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md) for detailed benchmark results and where each allocation comes from.
+## Learn more
 
-## Features
-
-- **Property Notifications** — Strongly-typed, fully async `PropertyChangedAsync` events
-- **Collection Changes** — `CollectionChangedAsync` with observable property support
-- **Data Validation** — `INotifyDataErrorInfoAsync` for async error collection
-- **Sequential & Parallel** — `[InvokeSequentially]` attribute for handler ordering
-- **Compiler Diagnostics** — Missing handlers and misconfigurations caught at build time
-- **Async-First** — Fully awaitable `ValueTask` handlers; no fire-and-forget, no callbacks
-- **Native AOT Compatible** — No reflection at runtime; all dispatch resolved at compile time
-- **Source Generated** — Full type safety with compile-time verification
-
-## Documentation
-
-| Topic | Description |
-|-------|-------------|
-| [Getting Started](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/getting-started.md) | Install and send your first notification in five minutes |
-| [Observable Properties](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/observable-properties.md) | Defining and using observable properties |
-| [Async Notifications](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/async-notifications.md) | Property and collection changed notifications with await support |
-| [Collection Changes](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/collection-changes.md) | Observable collections with async event dispatch |
-| [Validation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/validation.md) | `INotifyDataErrorInfoAsync` with async error handling |
-| [Performance](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md) | Zero-alloc internals, detailed benchmarks, Native AOT |
-| [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/diagnostics.md) | ZAN001–ZAN006 source generator warnings and errors |
-| [Advanced Patterns](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/advanced-patterns.md) | Cancellation, scoped bindings, parallel handlers |
-| [Testing](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/testing.md) | Unit-testing observable models and notification flows |
-
-## Examples
-
-[`samples/ZeroAlloc.Notify.AotSmoke`](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/tree/main/samples/ZeroAlloc.Notify.AotSmoke) is a runnable console app that exercises the generated setters and async property events; CI publishes it with Native AOT and runs it. For collection changes and validation, the [Collection Changes](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/collection-changes.md) and [Validation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/validation.md) guides have complete examples.
-
-## License
-
-MIT. See [LICENSE](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/LICENSE).
+- Documentation: [notify.zeroalloc.net](https://notify.zeroalloc.net)
+- Runnable example: [`samples/ZeroAlloc.Notify.AotSmoke`](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/tree/main/samples/ZeroAlloc.Notify.AotSmoke), published with NativeAOT in CI
+- Related packages: [ZeroAlloc.AsyncEvents](https://github.com/ZeroAlloc-Net/ZeroAlloc.AsyncEvents) and the rest of the [ZeroAlloc family](https://github.com/ZeroAlloc-Net)
+- Contributing: issues and pull requests are welcome on [GitHub](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues)
+- License: [MIT](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/LICENSE)

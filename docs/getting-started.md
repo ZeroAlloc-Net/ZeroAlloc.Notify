@@ -13,13 +13,9 @@ sidebar_position: 1
 dotnet add package ZeroAlloc.Notify
 ```
 
-Add the generator as an analyzer:
+The source generator is bundled into the package, so this single `PackageReference` is all you need.
 
-```xml
-<ItemGroup>
-  <PackageReference Include="ZeroAlloc.Notify.Generator" Version="*" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-</ItemGroup>
-```
+> The standalone `ZeroAlloc.Notify.Generator` package is still published for backwards compatibility with existing direct PackageReferences, but new consumers should reference only `ZeroAlloc.Notify`.
 
 ## Your First Observable Property
 

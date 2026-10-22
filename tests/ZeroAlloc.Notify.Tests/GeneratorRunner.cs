@@ -31,9 +31,17 @@ internal static class GeneratorRunner
             result.Exception);
     }
 
+    /// <summary>The reference assemblies of the framework the tests run on.</summary>
+    public static IEnumerable<MetadataReference> FrameworkReferences =>
+#if NET10_0_OR_GREATER
+        Basic.Reference.Assemblies.Net100.References.All;
+#else
+        Basic.Reference.Assemblies.Net80.References.All;
+#endif
+
     public static CSharpCompilation CreateCompilation(params (string Path, string Source)[] files)
     {
-        var refs = new List<MetadataReference>(Basic.Reference.Assemblies.Net90.References.All)
+        var refs = new List<MetadataReference>(FrameworkReferences)
         {
             MetadataReference.CreateFromFile(typeof(NotifyPropertyChangedAsyncAttribute).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(ZeroAlloc.AsyncEvents.AsyncEventHandler<>).Assembly.Location),

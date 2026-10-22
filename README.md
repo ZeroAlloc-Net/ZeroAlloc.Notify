@@ -62,16 +62,16 @@ The generator writes the `Name` and `Age` properties, the `SetNameAsync` and `Se
 
 ## Performance
 
-One property change with five handlers attached. .NET 10, BenchmarkDotNet, same run; the ratio is against a hand-written `INotifyPropertyChanged`, computed from the published means.
+One property change with five handlers attached, .NET 10, all four libraries in one BenchmarkDotNet run. Allocations are exact; the ratio is each library's time against a hand-written `INotifyPropertyChanged` in the same run. Absolute timings are not published.
 
 | Library | Ratio | Allocated | Async handlers |
 |---|---:|---:|:---:|
 | Manual `INotifyPropertyChanged` | 1.00 | 24 B | no |
-| PropertyChanged.Fody | 0.82 | 0 B | no |
-| CommunityToolkit.Mvvm | 1.43 | 0 B | no |
-| **ZeroAlloc.Notify** | **3.20** | **40 B** | **yes** |
+| PropertyChanged.Fody | 0.93 | 0 B | no |
+| CommunityToolkit.Mvvm | 1.81 | 0 B | no |
+| **ZeroAlloc.Notify** | **1.47** | **40 B** | **yes** |
 
-Awaitable handlers have a cost: Notify is the slowest of the four and allocates its args object when someone listens. For purely synchronous view models, Fody is the faster choice. Allocation breakdown, design notes and full numbers: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md).
+Awaitable handlers have a cost: Notify is slower than hand-written code and Fody, and allocates its args object when someone listens. For purely synchronous view models, Fody is the faster choice. The .NET 8 ratios are in the performance doc. Allocation breakdown, design notes and full numbers: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md).
 
 ## Learn more
 

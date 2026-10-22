@@ -189,10 +189,9 @@ public partial class ContentViewModel
 
 ## Performance Characteristics
 
-- **Allocation**: 0 bytes
+- **Allocation**: 0 B when nobody subscribes. With subscribers, each raised event allocates its 40 B args object, plus a 24 B box each for the old and new value of a value-type property
 - **Dispatch**: Direct static method call, no virtual dispatch
-- **Inlining**: JIT typically inlines property setters
-- **Speed**: ~0.8–1.2 ns with 5 handlers
+- **Speed**: with five handlers, a change takes about 1.5 times as long as a hand-written `INotifyPropertyChanged`
 
 See [Performance](performance.md) for detailed benchmarks.
 

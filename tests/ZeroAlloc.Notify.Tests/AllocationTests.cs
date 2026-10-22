@@ -55,9 +55,8 @@ public class AllocationTests
     // With a subscriber, the only allocation Notify adds is the event args object, 40 B on 64-bit,
     // plus a box for each value-type old and new value. Making that allocation-free changes the
     // public args shape and is tracked as next-major work in #237. These gates pin the cost so
-    // it cannot grow unnoticed. They use sequential dispatch: the default parallel dispatch in
-    // ZeroAlloc.AsyncEvents adds its own allocation on net8 and net9, tracked in
-    // ZeroAlloc-Net/ZeroAlloc.AsyncEvents#229, and that is not this library's cost to gate.
+    // it cannot grow unnoticed, for sequential dispatch and for the default parallel dispatch,
+    // which on net8 used to add its own allocation in ZeroAlloc.AsyncEvents#229.
     [Fact]
     public void SetSequentialStringProperty_OneChangedSubscriber_AllocatesOnlyTheArgs()
     {
@@ -79,6 +78,31 @@ public class AllocationTests
         var i = 0;
         AllocationGate.AssertBudget(88, Iterations, () => Complete(vm.SetSequentialCountAsync(++i)),
             "SetSequentialCountAsync, one PropertyChanged subscriber");
+    }
+
+    [Fact]
+    public void SetStringProperty_FiveChangedSubscribers_AllocatesOnlyTheArgs()
+    {
+        var vm = new AllocationViewModel();
+        for (var h = 0; h < 5; h++)
+            vm.PropertyChangedAsync += (_, _) => ValueTask.CompletedTask;
+        var flip = false;
+        AllocationGate.AssertBudget(40, Iterations, () =>
+        {
+            flip = !flip;
+            Complete(vm.SetNameAsync(flip ? "a" : "b"));
+        }, "SetNameAsync, five PropertyChanged subscribers, parallel dispatch");
+    }
+
+    [Fact]
+    public void SetIntProperty_FiveChangedSubscribers_AllocatesOnlyTheArgsAndBoxes()
+    {
+        var vm = new AllocationViewModel();
+        for (var h = 0; h < 5; h++)
+            vm.PropertyChangedAsync += (_, _) => ValueTask.CompletedTask;
+        var i = 0;
+        AllocationGate.AssertBudget(88, Iterations, () => Complete(vm.SetCountAsync(++i)),
+            "SetCountAsync, five PropertyChanged subscribers, parallel dispatch");
     }
 
     [Fact]

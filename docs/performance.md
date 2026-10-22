@@ -8,7 +8,7 @@ Where a setter allocates:
 
 - **No subscribers: 0 B.** The generated setter checks for subscribers before it creates the event args, so a change nobody listens to allocates nothing, for reference-type and value-type properties alike.
 - **With subscribers:** each raised event allocates its args object, 40 B on 64-bit. For a value-type property the old and new value are also boxed into the args' `object?` properties, 24 B each for an `int`. A setter that raises both `PropertyChanging` and `PropertyChanged` with subscribers on both pays this once per event.
-- **Dispatch:** sequential dispatch, and parallel dispatch on .NET 10, add nothing when the handlers complete synchronously. Parallel dispatch on .NET 8 and netstandard currently adds about 136 B per raise inside ZeroAlloc.AsyncEvents, tracked in [ZeroAlloc.AsyncEvents#229](https://github.com/ZeroAlloc-Net/ZeroAlloc.AsyncEvents/issues/229).
+- **Dispatch:** sequential and parallel dispatch add nothing when the handlers complete synchronously, on .NET 8 and .NET 10. Parallel dispatch on .NET 8 used to add about 136 B per raise inside ZeroAlloc.AsyncEvents; [ZeroAlloc.AsyncEvents#229](https://github.com/ZeroAlloc-Net/ZeroAlloc.AsyncEvents/issues/229) fixed that in 1.1.8.
 
 The args are a `sealed class` with `object?` values. An allocation-free args shape changes the public event signature, so it is planned for the next major version, see [#237](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/237).
 
@@ -17,34 +17,45 @@ The args are a `sealed class` with `object?` values. An allocation-free args sha
 ### Property Notifications — 4-way comparison
 
 <!-- BENCH:START -->
-_Last refreshed: 2026-10-11_
+_Last refreshed: 2026-10-21_
 
-.NET 10.0.12, i9-12900HK, BenchmarkDotNet v0.15.8. All four libraries are configured with 5 attached handlers to mirror a realistic MVVM scenario.
+```
+BenchmarkDotNet v0.15.8, Windows 11 (10.0.26300.9711)
+12th Gen Intel Core i9-12900HK 2.50GHz, 1 CPU, 20 logical and 14 physical cores
+.NET SDK 10.0.402
+  [Host] : .NET 10.0.13 (10.0.13, 10.0.1326.50504), X64 RyuJIT x86-64-v3
+```
 
-| Library | Time | Allocated | Async support |
-|---|---:|---:|:---:|
-| Manual `INotifyPropertyChanged` (baseline) | 35.2 ns | 24 B | ❌ |
-| PropertyChanged.Fody | **29.0 ns** | **0 B** | ❌ |
-| CommunityToolkit.Mvvm | 50.2 ns | 0 B | ❌ |
-| **ZeroAlloc.Notify** | **112.8 ns** | **40 B** | ✅ |
+> Allocations are exact. Speed is shown as same-run ratios; absolute timings are not published.
 
-**Honest framing**: ZA.Notify is the slowest of the four and allocates. The 40 B is the `AsyncPropertyChangedEventArgs` object handed to the handlers, much like the `PropertyChangedEventArgs` the manual INPC baseline allocates. The view model also declares `PropertyChanging`, which has no subscribers here, so its args are never created. The other three are pure sync and can't `await` propagation.
+Measured on an otherwise idle machine, on .NET 10 and .NET 8, out of process, in three launches pinned to two performance cores. Ratio is each row's mean time relative to the hand-written `INotifyPropertyChanged` in the same run, with the lowest and highest of the three launches in brackets. All four libraries have five handlers attached, to mirror a realistic MVVM scenario. CommunityToolkit.Mvvm 8.4.2, PropertyChanged.Fody 4.1.0.
 
-**ZA.Notify is the only library here that supports async handlers.** The trade-off is the cost of that capability. For pure-sync view models that never need to `await` a handler (the vast majority of XAML/Avalonia/WinUI scenarios), **Fody is the right choice** — it's fastest and 0 B. For scenarios where the setter needs to wait for async work to complete before returning (e.g., async validation before notifying observers; coordinated async state transitions), ZA.Notify is the only library that supports it.
+| Library | Ratio, .NET 10 | Ratio, .NET 8 | Allocated | Async support |
+|---|---:|---:|---:|:---:|
+| Manual `INotifyPropertyChanged` (baseline) | 1.00 | 1.00 | 24 B | ❌ |
+| PropertyChanged.Fody | **0.93** (0.91–0.95) | **1.02** (1.02–1.03) | **0 B** | ❌ |
+| CommunityToolkit.Mvvm | 1.81 (1.74–1.91) | 1.84 (1.80–1.86) | 0 B | ❌ |
+| **ZeroAlloc.Notify** | **1.47** (1.42–1.54) | **1.63** (1.62–1.66) | **40 B** | ✅ |
 
-**Per-iteration scale**: at 112.8 ns / 40 B per setter call, ZA.Notify can run **~8.8M property changes per second per thread**. Most MVVM workloads have property change rates in the thousands per second, where the difference is invisible.
+**Honest framing**: ZA.Notify is slower than a hand-written `INotifyPropertyChanged` and Fody, and it allocates. It is faster than CommunityToolkit.Mvvm here, which allocates nothing. The 40 B is the `AsyncPropertyChangedEventArgs` object handed to the handlers, much like the `PropertyChangedEventArgs` the manual INPC baseline allocates. The view model also declares `PropertyChanging`, which has no subscribers here, so its args are never created. The other three are pure sync and cannot `await` propagation.
+
+**ZA.Notify is the only library here that supports async handlers.** The trade-off is the cost of that capability. For pure-sync view models that never need to `await` a handler (the vast majority of XAML/Avalonia/WinUI scenarios), **Fody is the right choice**: it is as fast as hand-written code and allocates nothing. For scenarios where the setter needs to wait for async work to complete before returning (e.g., async validation before notifying observers; coordinated async state transitions), ZA.Notify is the only library that supports it.
+
+The 2026-10-11 capture put ZA.Notify at 3.2 times the hand-written baseline. This run, three pinned launches on an idle machine, replaces it.
 
 ### Where the allocations come from
 
-Same environment, `NotifyAllocationBenchmarks`. The view model declares both `PropertyChanging` and `PropertyChanged`; "five subscribers" means five `PropertyChanged` handlers.
+`NotifyAllocationBenchmarks`, same runs. The view model declares both `PropertyChanging` and `PropertyChanged`; "five subscribers" means five `PropertyChanged` handlers with the default parallel dispatch. Ratio is relative to the `string` setter with no subscribers.
 
-| Setter | No subscribers | Five subscribers |
-|---|---:|---:|
-| `string` property | 0 B | 40 B |
-| `int` property | 0 B | 88 B |
+| Setter | No subscribers | Five subscribers | Ratio, .NET 10 | Ratio, .NET 8 |
+|---|---:|---:|---|---|
+| `string` property | 0 B | 40 B | 1.00 → 2.06 (1.96–2.14) | 1.00 → 2.06 (2.01–2.09) |
+| `int` property | 0 B | 88 B | 0.47 (0.45–0.48) → 2.12 (1.92–2.45) | 0.86 (0.81–0.90) → 2.23 (2.15–2.30) |
+
+The `int` property with subscribers pays the 40 B args plus a 24 B box each for the old and the new value.
 <!-- BENCH:END -->
 
-The test suite gates these numbers in `tests/ZeroAlloc.Notify.Tests/AllocationTests.cs`, so a regression fails the build.
+The test suite gates these numbers in `tests/ZeroAlloc.Notify.Tests/AllocationTests.cs` on .NET 8 and .NET 10, for sequential and parallel dispatch, so a regression fails the build.
 
 > **Note:** Collection and validation benchmarks are not yet included in the benchmark suite. See `benchmarks/Notify.Benchmarks/` to add more.
 
@@ -101,6 +112,7 @@ To run the benchmark suite yourself:
 ```bash
 cd benchmarks/Notify.Benchmarks
 dotnet run -c Release --framework net10.0
+dotnet run -c Release --framework net8.0
 ```
 
 Results are output to `BenchmarkDotNet.Artifacts/results/`.
@@ -110,7 +122,7 @@ Results are output to `BenchmarkDotNet.Artifacts/results/`.
 ### vs INotifyPropertyChanged (Standard INPC)
 
 - **Allocation**: both allocate an args object per notification: 40 B for ZeroAlloc.Notify, 24 B for INPC. With no subscribers ZeroAlloc.Notify allocates nothing
-- **Speed**: Async path is 3.2x slower than sync INPC baseline — the cost buys full await semantics
+- **Speed**: the async path takes 1.47 times as long as the sync INPC baseline on .NET 10 and 1.63 times on .NET 8; the cost buys full await semantics
 - **Async support**: INPC has no built-in async support; ZeroAlloc.Notify has first-class `ValueTask` support
 - **Full await**: INPC cannot await handlers; ZeroAlloc can
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.14](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.13...v1.2.14) (2026-10-22)
+
+
+### Documentation
+
+* re-measure benchmarks on net8 and net10, gate parallel dispatch ([#273](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/273)) ([79a4007](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/79a4007ef766ded01c386c2385f3c6ea5c2d946a))
+
 ## [1.2.13](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.2.12...v1.2.13) (2026-10-16)
 
 

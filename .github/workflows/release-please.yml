@@ -88,6 +88,7 @@ jobs:
       dotnet-version: |
         9.0.x
         10.0.x
+        11.0.x
       # nuget.org, plus the GitHub release, as before the shared workflow.
       github-packages: false
       release-assets: true

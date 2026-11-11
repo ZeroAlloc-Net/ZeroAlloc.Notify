@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <RootNamespace>ZeroAlloc.Notify.AotSmoke</RootNamespace>
     <IsPackable>false</IsPackable>
     <PublishAot>true</PublishAot>
@@ -12,8 +12,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- The main lib targets net10.0 among others, so this net10.0 app resolves its
-         net10.0 build: the IsAotCompatible one this smoke test is meant to cover. -->
+    <!-- The main lib targets net10.0 among others, so this net11.0 app resolves its
+         net11.0 build: the IsAotCompatible one this smoke test is meant to cover. -->
     <ProjectReference Include="..\..\src\ZeroAlloc.Notify\ZeroAlloc.Notify.csproj"
                       UndefineProperties="PublishAot" />
     <ProjectReference Include="..\..\src\ZeroAlloc.Notify.Generator\ZeroAlloc.Notify.Generator.csproj"

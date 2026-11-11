@@ -33,7 +33,9 @@ internal static class GeneratorRunner
 
     /// <summary>The reference assemblies of the framework the tests run on.</summary>
     public static IEnumerable<MetadataReference> FrameworkReferences =>
-#if NET10_0_OR_GREATER
+#if NET11_0_OR_GREATER
+        Basic.Reference.Assemblies.Net110.References.All;
+#elif NET10_0_OR_GREATER
         Basic.Reference.Assemblies.Net100.References.All;
 #else
         Basic.Reference.Assemblies.Net80.References.All;

@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- netstandard2.0 for broad compat; net8/net10 are LTS-only concrete targets, net9 STS omitted
-         by policy. The concrete targets run the AOT, trim and single-file analyzers. -->
-    <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
+    <!-- netstandard2.0 for broad compat; net8/net10 are LTS concrete targets, net11 is added to follow the
+         current SDK, net9 STS omitted by policy. The concrete targets run the AOT, trim and single-file analyzers. -->
+    <TargetFrameworks>netstandard2.0;net8.0;net10.0;net11.0</TargetFrameworks>
     <PackageId>ZeroAlloc.Notify</PackageId>
     <Description>Source-generated async INotifyPropertyChanged, INotifyPropertyChanging, INotifyCollectionChanged and INotifyDataErrorInfo for .NET. ValueTask-based, no fire-and-forget; a change with no subscribers allocates nothing.</Description>
     <Version>0.0.0-local</Version>

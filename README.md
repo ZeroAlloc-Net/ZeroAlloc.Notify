@@ -57,7 +57,7 @@ The generator writes the `Name` and `Age` properties, the `SetNameAsync` and `Se
 - **Async validation** through `INotifyDataErrorInfoAsync`. [Validation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/validation.md)
 - **Parallel handlers by default, sequential on request** with `[InvokeSequentially]`, and a `CancellationToken` on every setter. [Async notifications](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/async-notifications.md)
 - **Build-time checks**, ZAN001 to ZAN006. [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/diagnostics.md)
-- **Targets** `netstandard2.0`, `net8.0` and `net10.0`.
+- **Targets** `netstandard2.0`, `net8.0`, `net10.0` and `net11.0`.
 - **Built on [ZeroAlloc.AsyncEvents](https://github.com/ZeroAlloc-Net/ZeroAlloc.AsyncEvents)**, the async event primitive behind every handler.
 
 ## Performance

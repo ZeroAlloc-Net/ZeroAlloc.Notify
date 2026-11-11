@@ -148,7 +148,7 @@ Results are output to `BenchmarkDotNet.Artifacts/results/`.
 
 ## Native AOT Compatibility
 
-ZeroAlloc.Notify is fully compatible with Native AOT. Since all dispatch is resolved at compile time via the source generator, no reflection is needed at runtime. The package ships net8.0 and net10.0 builds marked `IsAotCompatible`, so the trim and AOT analyzers check the library itself, next to a netstandard2.0 build for older targets:
+ZeroAlloc.Notify is fully compatible with Native AOT. Since all dispatch is resolved at compile time via the source generator, no reflection is needed at runtime. The package ships net8.0, net10.0 and net11.0 builds marked `IsAotCompatible`, so the trim and AOT analyzers check the library itself, next to a netstandard2.0 build for older targets:
 
 ```bash
 dotnet publish -c Release -p PublishAot=true

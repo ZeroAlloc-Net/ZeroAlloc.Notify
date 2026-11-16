@@ -24,13 +24,14 @@ CI job `build` in `.github/workflows/ci.yml`:
 
 ```bash
 dotnet tool restore
+VERSION=$(dotnet gitversion /showvariable SemVer)
 dotnet restore
 dotnet build --no-restore -c Release -p:Version=$VERSION
 dotnet test --no-build -c Release --collect "XPlat Code Coverage" --settings coverage.runsettings --results-directory TestResults
 dotnet pack src/ZeroAlloc.Notify/ZeroAlloc.Notify.csproj --no-build -c Release -p:PackageVersion=$VERSION -o ./artifacts
 ```
 
-`$VERSION` comes from `dotnet gitversion /showvariable SemVer`. It must be passed to the build too:
+`$VERSION` is set by the second command of the block. It must be passed to the build too:
 `dotnet pack` fails with ZAVERSION001 or ZAVERSION002 otherwise. The same job packs the Generator
 project the same way and gates coverage at 80 percent line coverage.
 
@@ -60,7 +61,8 @@ dotnet test --no-build -c Release -f net10.0 --filter "FullyQualifiedName~Alloca
   in `src/ZeroAlloc.Notify` fails the build.
 - Allocation budgets are pinned by `AllocationTests`: 0 B with no subscribers, 40 B for the args object
   with a subscriber on 64-bit, plus a box per value-type value. A change to the setter hot path must keep
-  these figures or change the tests and the README claim together.
+  these figures or change the tests and the README claim together. This is the one exception to the
+  org rule that the hot path allocates nothing: the 40 B event-args object is the budget, not a defect.
 - Generator code must stay incremental-cache friendly: model types are equatable (`EquatableArray`,
   `LocationInfo`), and `IncrementalCachingTests` guards it. Do not put `ISymbol` or `SyntaxNode` in a
   pipeline model.

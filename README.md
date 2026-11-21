@@ -68,11 +68,11 @@ One property change with five handlers attached, .NET 10, all four libraries in 
 | Library | Ratio | Allocated | Async handlers |
 |---|---:|---:|:---:|
 | Manual `INotifyPropertyChanged` | 1.00 | 24 B | no |
-| PropertyChanged.Fody | 0.93 | 0 B | no |
-| CommunityToolkit.Mvvm | 1.81 | 0 B | no |
-| **ZeroAlloc.Notify** | **1.47** | **0 B** | **yes** |
+| PropertyChanged.Fody | 0.76 | 0 B | no |
+| CommunityToolkit.Mvvm | 1.35 | 0 B | no |
+| **ZeroAlloc.Notify** | **1.52** | **0 B** | **yes** |
 
-Awaitable handlers have a cost: Notify is slower than hand-written code and Fody. For purely synchronous view models, Fody is the faster choice. Notify's ratio was measured with version 1.3; its 0 B is the 2.0 figure, gated by the test suite, since the 40 B args object of 1.x became a struct. Allocation breakdown, design notes and full numbers: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md).
+Awaitable handlers have a cost: Notify is slower than hand-written code, Fody and CommunityToolkit.Mvvm. For purely synchronous view models, Fody is the faster choice. Measured with version 2.0 on a GitHub-hosted runner; the test suite also gates the 0 B. Allocation breakdown, design notes and full numbers: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md).
 
 ## Learn more
 

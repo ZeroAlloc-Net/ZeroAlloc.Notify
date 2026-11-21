@@ -60,9 +60,11 @@ dotnet test --no-build -c Release -f net10.0 --filter "FullyQualifiedName~Alloca
 - The runtime library enables AOT analyzers on the concrete targets (`IsAotCompatible`), so reflection
   in `src/ZeroAlloc.Notify` fails the build.
 - Allocation budgets are pinned by `AllocationTests`: 0 B per change, with and without subscribers, for
-  reference-type and value-type properties. The property event args are `readonly struct`s whose values
-  are `PropertyValue`s, which keep a value type of up to 16 bytes without references inline. A change to
-  the setter hot path must keep 0 B.
+  reference-type properties and value types that `PropertyValue.From` stores inline, with synchronous
+  handlers. The property event args are `readonly struct`s whose values are `PropertyValue`s, which keep
+  a value type of up to 16 bytes without references inline. A struct larger than 16 bytes, or one that
+  contains references, takes the boxed fallback and is outside the 0 B budget. A change to the setter
+  hot path must keep 0 B for the inline and reference cases.
 - Generator code must stay incremental-cache friendly: model types are equatable (`EquatableArray`,
   `LocationInfo`), and `IncrementalCachingTests` guards it. Do not put `ISymbol` or `SyntaxNode` in a
   pipeline model.

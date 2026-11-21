@@ -12,7 +12,7 @@ Source-generated, awaitable `INotifyPropertyChanged` for .NET: `await vm.SetName
 ## Why ZeroAlloc.Notify
 
 - **Setters you can `await`.** Async validation, saving or coordinated state changes complete before the setter returns. CommunityToolkit.Mvvm and PropertyChanged.Fody only offer synchronous notifications.
-- **0 B per change, with or without subscribers.** The property event args are structs, and their old and new values keep a small value type such as `int` inline instead of boxing it; tests assert 0 B for reference-type and value-type properties, for sequential and parallel dispatch.
+- **0 B per change, with or without subscribers.** The property event args are structs, and their old and new values keep a small value type such as `int` inline instead of boxing it; tests assert 0 B for reference-type and value-type properties, for sequential and parallel dispatch with synchronous handlers.
 - **Works under NativeAOT and trimming.** All plumbing is generated at compile time; CI publishes and runs a NativeAOT sample on every build.
 - **Compile-time diagnostics.** A class that is not `partial`, a record, or a stray `[ObservableProperty]` is reported by the build, not discovered at runtime.
 

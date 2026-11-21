@@ -9,9 +9,11 @@ namespace ZeroAlloc.Notify;
 /// <para>
 /// A reference-type value is stored as the reference itself. A value type of at most 16 bytes that
 /// contains no references, such as <see cref="int"/>, <see cref="double"/>, <see cref="decimal"/>,
-/// <see cref="Guid"/>, <see cref="DateTime"/>, an enum or a <see cref="Nullable{T}"/> of these, is
-/// stored inline in the struct. Neither case allocates. A larger value type, or one that contains
-/// references, is boxed once when the value is created.
+/// <see cref="Guid"/>, <see cref="DateTime"/>, an enum, or a <see cref="Nullable{T}"/> of a type of at
+/// most 8 bytes such as <c>int?</c> or <c>DateTime?</c>, is stored inline in the struct. Neither case
+/// allocates. A larger value type, such as <c>Guid?</c> or <c>decimal?</c>, or one that contains
+/// references, is boxed once when the value is created. A <see langword="null"/> is stored as no value
+/// at all, so it reads as <see langword="null"/> for every reference type and nullable value type.
 /// </para>
 /// <para>
 /// Read the value with <see cref="TryGet{T}(out T)"/> or <see cref="As{T}"/>, giving the property's
@@ -35,6 +37,11 @@ public readonly struct PropertyValue
     /// <summary>Creates a value from <paramref name="value"/>, boxing only the value types that cannot be stored inline.</summary>
     public static PropertyValue From<T>(T value)
     {
+        // A null, including an empty Nullable<T>, carries no type, so it reads as null for every
+        // reference type and nullable value type, as a null reference does.
+        if (value is null)
+            return default;
+
         if (!RuntimeHelpers.IsReferenceOrContainsReferences<T>() && Unsafe.SizeOf<T>() <= Unsafe.SizeOf<InlineStorage>())
         {
             var inline = default(InlineStorage);
@@ -95,7 +102,13 @@ public readonly struct PropertyValue
     /// <summary>Returns the value as an object. This boxes a value type that is stored inline.</summary>
     public object? ToObject() => _object is TypeTag tag ? tag.Box(_inline) : _object;
 
-    /// <summary>Formats the value with its own <see cref="object.ToString"/>, without boxing an inline value.</summary>
+    /// <summary>
+    /// Formats the value with its own <see cref="object.ToString"/>. An inline value is not boxed when
+    /// its type overrides <see cref="object.ToString"/>, as the primitives, <see cref="decimal"/>,
+    /// <see cref="Guid"/> and <see cref="DateTime"/> do. An enum, or a struct that inherits
+    /// <see cref="object.ToString"/>, is boxed by the runtime for the call. A <see langword="null"/>
+    /// formats as an empty string.
+    /// </summary>
     public override string ToString()
         => (_object is TypeTag tag ? tag.Format(_inline) : _object?.ToString()) ?? string.Empty;
 

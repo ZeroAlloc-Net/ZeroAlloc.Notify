@@ -77,6 +77,34 @@ public class PropertyValueTests
     }
 
     [Fact]
+    public void NullNullable_ReadsAsNullForEveryNullableAndReferenceType()
+    {
+        var value = PropertyValue.From<int?>(null);
+        Assert.True(value.TryGet<long?>(out var asLong));
+        Assert.Null(asLong);
+        Assert.True(value.TryGet<string>(out var asString));
+        Assert.Null(asString);
+        Assert.False(value.TryGet<int>(out _));
+    }
+
+    [Fact]
+    public void NonNullNullable_MatchesOnlyItsExactType()
+    {
+        var value = PropertyValue.From<int?>(5);
+        Assert.False(value.TryGet<long?>(out _));
+        Assert.False(value.TryGet<int>(out _));
+    }
+
+    [Fact]
+    public void NullablesLargerThanTheInlineStorage_RoundTripBoxed()
+    {
+        var guid = Guid.NewGuid();
+        Assert.Equal(guid, PropertyValue.From<Guid?>(guid).As<Guid?>());
+        Assert.Equal(1.5m, PropertyValue.From<decimal?>(1.5m).As<decimal?>());
+        Assert.Null(PropertyValue.From<Guid?>(null).As<Guid?>());
+    }
+
+    [Fact]
     public void ReferenceValue_RoundTripsAsItsOwnTypeAndBaseTypes()
     {
         var value = PropertyValue.From("text");

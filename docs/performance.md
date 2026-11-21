@@ -7,7 +7,8 @@ ZeroAlloc.Notify is designed to minimize allocations on property and collection 
 Where a setter allocates:
 
 - **No subscribers: 0 B.** The generated setter checks for subscribers before it creates the event args, so a change nobody listens to allocates nothing, for reference-type and value-type properties alike.
-- **With subscribers: 0 B.** The property event args are a `readonly struct`, and their old and new values are `PropertyValue`s, which store a reference-type value as the reference and a value type of up to 16 bytes without references, such as `int`, `double`, `decimal`, `Guid`, `DateTime`, an enum or a nullable of these, inline. Only a larger struct, or a struct that contains references, is boxed, once per value.
+- **With subscribers: 0 B** for reference-type properties and for value types stored inline, when the handlers complete synchronously. The property event args are a `readonly struct`, and their old and new values are `PropertyValue`s, which store a reference-type value as the reference and a value type of up to 16 bytes without references inline: `int`, `double`, `decimal`, `Guid`, `DateTime`, `DateTimeOffset`, an enum, or a nullable of a type of at most 8 bytes such as `int?` or `DateTime?`. A larger struct, such as `Guid?` or `decimal?`, or a struct that contains references, is boxed once per value.
+- **Handlers that do not complete synchronously** allocate what any awaited `ValueTask` does: the setter's async state machine, and whatever the handlers allocate.
 - **Dispatch:** sequential and parallel dispatch add nothing when the handlers complete synchronously.
 
 Before 2.0.0 the args were a `sealed class` with `object?` values: 40 B per raised event on 64-bit, plus a 24 B box for each `int` old and new value. [#237](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/237) made them allocation-free.

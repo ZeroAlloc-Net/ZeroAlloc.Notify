@@ -125,8 +125,10 @@ vm.PropertyChangedAsync += (args, ct) =>
 ```
 
 An inline value matches only its exact type: an `int` property does not read as `long`. Reading as
-`object` or an interface, or calling `ToObject()`, boxes the value. `ToString()` formats the value
-without boxing it, so string interpolation works as before. Do not assign a `PropertyValue` to an
+`object` or an interface, or calling `ToObject()`, boxes the value. A `null` old or new value reads
+as `null` for every reference type and nullable value type. `ToString()` formats the value, so
+string interpolation works as before. It does not box a type that overrides `ToString()`, such as
+`int`, `decimal` or `Guid`; an enum or a struct that inherits `ToString()` is boxed for the call. Do not assign a `PropertyValue` to an
 `object` variable or compare it with `Assert.Equal(expected, args.NewValue)`: that boxes the
 `PropertyValue` itself, not the value. Use `As<T>()`.
 
@@ -213,7 +215,7 @@ public partial class ContentViewModel
 
 ## Performance Characteristics
 
-- **Allocation**: 0 B, with or without subscribers. The args are structs, and a value type of up to 16 bytes without references, such as `int` or `Guid`, is held inline instead of boxed. A larger struct is boxed once per value
+- **Allocation**: 0 B, with or without subscribers, when the handlers complete synchronously. The args are structs, and a value type of up to 16 bytes without references, such as `int` or `Guid`, is held inline instead of boxed. A larger struct, or one that contains references, is boxed once per value
 - **Dispatch**: Direct static method call, no virtual dispatch
 - **Speed**: with five handlers, a change takes about 1.5 times as long as a hand-written `INotifyPropertyChanged`
 

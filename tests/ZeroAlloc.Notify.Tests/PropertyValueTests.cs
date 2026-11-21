@@ -31,8 +31,17 @@ public class PropertyValueTests
         var value = PropertyValue.From(42);
         Assert.False(value.TryGet<long>(out _));
         Assert.False(value.TryGet<uint>(out _));
-        Assert.False(value.TryGet<int?>(out _));
+        Assert.False(value.TryGet<long?>(out _));
         Assert.Throws<InvalidCastException>(() => value.As<long>());
+    }
+
+    [Fact]
+    public void InlineValue_ReadsAsItsNullable()
+    {
+        var value = PropertyValue.From(42);
+        Assert.True(value.TryGet<int?>(out var read));
+        Assert.Equal(42, read);
+        Assert.Equal(42, value.As<int?>());
     }
 
     [Fact]
@@ -88,11 +97,41 @@ public class PropertyValueTests
     }
 
     [Fact]
-    public void NonNullNullable_MatchesOnlyItsExactType()
+    public void NonNullNullable_ReadsAsItsUnderlyingTypeButNotAnother()
     {
         var value = PropertyValue.From<int?>(5);
+        Assert.True(value.TryGet<int>(out var read));
+        Assert.Equal(5, read);
+        Assert.Equal(5, value.As<int>());
         Assert.False(value.TryGet<long?>(out _));
-        Assert.False(value.TryGet<int>(out _));
+        Assert.False(value.TryGet<long>(out _));
+    }
+
+    [Fact]
+    public void InlineAndBoxedNullables_ReadTheSameWay()
+    {
+        // int? is stored inline and Guid? is boxed; a caller cannot see the difference.
+        var number = PropertyValue.From<int?>(5);
+        var guid = Guid.NewGuid();
+        var boxedGuid = PropertyValue.From<Guid?>(guid);
+
+        Assert.Equal(5, number.As<int>());
+        Assert.Equal(guid, boxedGuid.As<Guid>());
+        Assert.Equal(5, number.As<int?>());
+        Assert.Equal(guid, boxedGuid.As<Guid?>());
+        Assert.Equal(5, PropertyValue.From(5).As<int?>());
+        Assert.Equal(guid, PropertyValue.From(guid).As<Guid?>());
+        Assert.False(number.TryGet<long>(out _));
+        Assert.False(boxedGuid.TryGet<decimal>(out _));
+    }
+
+    [Fact]
+    public void InlineValue_ReadsAsItsOwnTypeWithoutAllocating()
+    {
+        var value = PropertyValue.From<int?>(5);
+        var plain = PropertyValue.From(5);
+        AllocationGate.AssertBudget(0, 10_000, () => _ = value.As<int?>(), "int? read as int?");
+        AllocationGate.AssertBudget(0, 10_000, () => _ = plain.As<int>(), "int read as int");
     }
 
     [Fact]

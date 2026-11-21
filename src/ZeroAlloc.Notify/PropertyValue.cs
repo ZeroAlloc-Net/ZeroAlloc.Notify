@@ -17,9 +17,12 @@ namespace ZeroAlloc.Notify;
 /// </para>
 /// <para>
 /// Read the value with <see cref="TryGet{T}(out T)"/> or <see cref="As{T}"/>, giving the property's
-/// declared type. An inline value matches only its exact type: an <see cref="int"/> property does not
-/// read as <see cref="long"/>. Asking for a reference type such as <see cref="object"/> or an
-/// interface boxes an inline value, as does <see cref="ToObject"/>.
+/// declared type, which reads without boxing. A value reads as the types its boxed form would match,
+/// whether it is stored inline or boxed: an <see cref="int"/> does not read as <see cref="long"/>, but
+/// a non-null <c>int?</c> reads as <see cref="int"/> and an <see cref="int"/> as <c>int?</c>, just as
+/// a <c>Guid?</c> and a <see cref="Guid"/> do. Reading an inline value as any type other than its own,
+/// such as <see cref="object"/>, an interface or the other side of a nullable, boxes it, as does
+/// <see cref="ToObject"/>.
 /// </para>
 /// </remarks>
 public readonly struct PropertyValue
@@ -67,9 +70,11 @@ public readonly struct PropertyValue
                 return true;
             }
 
-            // Only a reference type, such as object or an interface, can hold a boxed inline value.
+            // Any other type gets the same answer as a boxed value: object and interfaces match, and
+            // so do U and Nullable<U> in either direction, but an int does not read as a long. This
+            // boxes, so it allocates only on a read whose type differs from the stored one.
             // An inline value is never null: From stores a null as no value.
-            if (!typeof(T).IsValueType && tag.Box(_inline) is T boxed)
+            if (tag.Box(_inline) is T boxed)
             {
                 value = boxed;
                 return true;

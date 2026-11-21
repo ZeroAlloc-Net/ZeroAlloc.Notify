@@ -107,6 +107,12 @@ public partial class PersonViewModel
 }
 ```
 
+The generated `RaisePropertyChangedAsync` and `RaisePropertyChangingAsync` are generic over the value
+type, and the compiler infers it from the two values. A call that passes `null` or `default` for both
+values gives it nothing to infer from, so it needs an explicit type argument:
+`RaisePropertyChangedAsync<string?>(nameof(FullName), null, null, ct)`. The same holds for two values
+of different types, such as an `int` and a `string`: write `RaisePropertyChangedAsync<object?>(...)`.
+
 ## Reading Old and New Values
 
 `args.OldValue` and `args.NewValue` are `PropertyValue`s. Read them with the property's type:
@@ -124,8 +130,11 @@ vm.PropertyChangedAsync += (args, ct) =>
 };
 ```
 
-An inline value matches only its exact type: an `int` property does not read as `long`. Reading as
-`object` or an interface, or calling `ToObject()`, boxes the value. A `null` old or new value reads
+Read the value as the property's declared type; that does not box. A value reads as the types its
+boxed form would match, whether it is stored inline or boxed: an `int` property does not read as
+`long`, but a non-null `int?` reads as `int` and an `int` as `int?`, the same as `Guid?` and `Guid`.
+Reading an inline value as any other type than its own, such as `object`, an interface or the other
+side of a nullable, boxes it, and so does `ToObject()`. A `null` old or new value reads
 as `null` for every reference type and nullable value type. `ToString()` formats the value, so
 string interpolation works as before. It does not box a type that overrides `ToString()`, such as
 `int`, `decimal` or `Guid`; an enum or a struct that inherits `ToString()` is boxed for the call. Do not assign a `PropertyValue` to an

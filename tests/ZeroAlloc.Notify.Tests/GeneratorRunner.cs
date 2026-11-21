@@ -35,10 +35,8 @@ internal static class GeneratorRunner
     public static IEnumerable<MetadataReference> FrameworkReferences =>
 #if NET11_0_OR_GREATER
         Basic.Reference.Assemblies.Net110.References.All;
-#elif NET10_0_OR_GREATER
-        Basic.Reference.Assemblies.Net100.References.All;
 #else
-        Basic.Reference.Assemblies.Net80.References.All;
+        Basic.Reference.Assemblies.Net100.References.All;
 #endif
 
     public static CSharpCompilation CreateCompilation(params (string Path, string Source)[] files)

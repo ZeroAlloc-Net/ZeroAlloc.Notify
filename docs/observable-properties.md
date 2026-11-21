@@ -69,7 +69,7 @@ public partial class PersonViewModel
         {
             if (args.PropertyName == nameof(Age))
             {
-                var newValue = (int)args.NewValue!;
+                var newValue = args.NewValue.As<int>();   // typed read, no unboxing
                 if (newValue < 0 || newValue > 150)
                     throw new ArgumentOutOfRangeException(nameof(Age), "Age must be 0-150");
                 Console.WriteLine($"Age changed from {args.OldValue} to {newValue}");
@@ -107,17 +107,41 @@ public partial class PersonViewModel
 }
 ```
 
+## Reading Old and New Values
+
+`args.OldValue` and `args.NewValue` are `PropertyValue`s. Read them with the property's type:
+
+```csharp
+vm.PropertyChangedAsync += (args, ct) =>
+{
+    if (args.PropertyName == nameof(PersonViewModel.Age))
+    {
+        int age = args.NewValue.As<int>();               // throws InvalidCastException for another type
+        if (args.OldValue.TryGet<int>(out var previous))  // returns false for another type
+            Console.WriteLine($"Age {previous} -> {age}");
+    }
+    return ValueTask.CompletedTask;
+};
+```
+
+An inline value matches only its exact type: an `int` property does not read as `long`. Reading as
+`object` or an interface, or calling `ToObject()`, boxes the value. `ToString()` formats the value
+without boxing it, so string interpolation works as before. Do not assign a `PropertyValue` to an
+`object` variable or compare it with `Assert.Equal(expected, args.NewValue)`: that boxes the
+`PropertyValue` itself, not the value. Use `As<T>()`.
+
 ## Property Changed Events
 
 Subscribe to changes for a specific property:
 
 ```csharp
-await vm.PropertyChangedAsync += async (args, ct) =>
+vm.PropertyChangedAsync += (args, ct) =>
 {
     if (args.PropertyName == nameof(PersonViewModel.FirstName))
     {
         Console.WriteLine($"First name: {args.OldValue} → {args.NewValue}");
     }
+    return ValueTask.CompletedTask;
 };
 ```
 
@@ -189,7 +213,7 @@ public partial class ContentViewModel
 
 ## Performance Characteristics
 
-- **Allocation**: 0 B when nobody subscribes. With subscribers, each raised event allocates its 40 B args object, plus a 24 B box each for the old and new value of a value-type property
+- **Allocation**: 0 B, with or without subscribers. The args are structs, and a value type of up to 16 bytes without references, such as `int` or `Guid`, is held inline instead of boxed. A larger struct is boxed once per value
 - **Dispatch**: Direct static method call, no virtual dispatch
 - **Speed**: with five handlers, a change takes about 1.5 times as long as a hand-written `INotifyPropertyChanged`
 

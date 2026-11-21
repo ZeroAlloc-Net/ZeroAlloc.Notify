@@ -56,7 +56,7 @@ vm.ErrorsChangedAsync += async (args, ct) =>
 vm.PropertyChangedAsync += async (args, ct) =>
 {
     if (args.PropertyName == nameof(vm.Email))
-        await vm.ValidateEmailAsync((string)args.NewValue!, ct);
+        await vm.ValidateEmailAsync(args.NewValue.As<string>()!, ct);
 };
 
 await vm.SetEmailAsync("not-an-email");
@@ -78,7 +78,7 @@ vm.PropertyChangedAsync += async (args, ct) =>
 {
     if (args.PropertyName == nameof(vm.Username))
     {
-        var taken = await _service.IsUsernameTakenAsync((string?)args.NewValue, ct);
+        var taken = await _service.IsUsernameTakenAsync(args.NewValue.As<string>(), ct);
         if (taken)
         {
             vm._errors[nameof(vm.Username)] = new List<string> { "Username already taken" };

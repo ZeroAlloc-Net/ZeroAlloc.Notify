@@ -1,1 +1,24 @@
 #nullable enable
+override ZeroAlloc.Notify.PropertyValue.ToString() -> string!
+static ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.Create<T>(string! propertyName, T oldValue, T newValue) -> ZeroAlloc.Notify.AsyncPropertyChangedEventArgs
+static ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.Create<T>(string! propertyName, T oldValue, T newValue) -> ZeroAlloc.Notify.AsyncPropertyChangingEventArgs
+static ZeroAlloc.Notify.PropertyValue.From<T>(T value) -> ZeroAlloc.Notify.PropertyValue
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.AsyncPropertyChangedEventArgs() -> void
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.AsyncPropertyChangedEventArgs(string! propertyName, ZeroAlloc.Notify.PropertyValue oldValue, ZeroAlloc.Notify.PropertyValue newValue) -> void
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.NewValue.get -> ZeroAlloc.Notify.PropertyValue
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.OldValue.get -> ZeroAlloc.Notify.PropertyValue
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.PropertyName.get -> string!
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.AsyncPropertyChangingEventArgs() -> void
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.AsyncPropertyChangingEventArgs(string! propertyName, ZeroAlloc.Notify.PropertyValue oldValue, ZeroAlloc.Notify.PropertyValue newValue) -> void
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.NewValue.get -> ZeroAlloc.Notify.PropertyValue
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.OldValue.get -> ZeroAlloc.Notify.PropertyValue
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.PropertyName.get -> string!
+ZeroAlloc.Notify.INotifyPropertyChangedAsync.PropertyChangedAsync -> ZeroAlloc.AsyncEvents.AsyncEvent<ZeroAlloc.Notify.AsyncPropertyChangedEventArgs>!
+ZeroAlloc.Notify.INotifyPropertyChangingAsync.PropertyChangingAsync -> ZeroAlloc.AsyncEvents.AsyncEvent<ZeroAlloc.Notify.AsyncPropertyChangingEventArgs>!
+ZeroAlloc.Notify.PropertyValue
+ZeroAlloc.Notify.PropertyValue.As<T>() -> T?
+ZeroAlloc.Notify.PropertyValue.PropertyValue() -> void
+ZeroAlloc.Notify.PropertyValue.ToObject() -> object?
+ZeroAlloc.Notify.PropertyValue.TryGet<T>(out T? value) -> bool

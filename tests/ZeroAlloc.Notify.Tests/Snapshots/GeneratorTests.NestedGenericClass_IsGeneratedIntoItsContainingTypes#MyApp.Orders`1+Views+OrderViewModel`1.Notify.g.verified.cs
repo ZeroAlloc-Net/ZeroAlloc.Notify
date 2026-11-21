@@ -26,11 +26,11 @@ partial record struct Orders<TKey>
             }
             #pragma warning restore MA0046
 
-            protected global::System.Threading.Tasks.ValueTask RaisePropertyChangedAsync(string propertyName, object? oldValue, object? newValue, global::System.Threading.CancellationToken ct = default)
+            protected global::System.Threading.Tasks.ValueTask RaisePropertyChangedAsync<__TValue>(string propertyName, __TValue oldValue, __TValue newValue, global::System.Threading.CancellationToken ct = default)
             {
                 var __handler = _propertyChangedAsync;
                 if (__handler.Count == 0) return default;
-                return __handler.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(propertyName, oldValue, newValue), ct);
+                return __handler.InvokeAsync(global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.Create(propertyName, oldValue, newValue), ct);
             }
 
             private global::ZeroAlloc.AsyncEvents.AsyncEventHandler<global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs> _propertyChangingAsync = new(global::ZeroAlloc.AsyncEvents.InvokeMode.Parallel);
@@ -43,11 +43,11 @@ partial record struct Orders<TKey>
             }
             #pragma warning restore MA0046
 
-            protected global::System.Threading.Tasks.ValueTask RaisePropertyChangingAsync(string propertyName, object? oldValue, object? newValue, global::System.Threading.CancellationToken ct = default)
+            protected global::System.Threading.Tasks.ValueTask RaisePropertyChangingAsync<__TValue>(string propertyName, __TValue oldValue, __TValue newValue, global::System.Threading.CancellationToken ct = default)
             {
                 var __handler = _propertyChangingAsync;
                 if (__handler.Count == 0) return default;
-                return __handler.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(propertyName, oldValue, newValue), ct);
+                return __handler.InvokeAsync(global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.Create(propertyName, oldValue, newValue), ct);
             }
 
             public TKey? Id
@@ -62,11 +62,11 @@ partial record struct Orders<TKey>
                 var __old = _id;
                 var __changing = _propertyChangingAsync;
                 if (__changing.Count != 0)
-                    await __changing.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(nameof(Id), __old, value), ct).ConfigureAwait(false);
+                    await __changing.InvokeAsync(global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.Create<TKey?>(nameof(Id), __old, value), ct).ConfigureAwait(false);
                 _id = value;
                 var __changed = _propertyChangedAsync;
                 if (__changed.Count != 0)
-                    await __changed.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(nameof(Id), __old, value), ct).ConfigureAwait(false);
+                    await __changed.InvokeAsync(global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.Create<TKey?>(nameof(Id), __old, value), ct).ConfigureAwait(false);
             }
 
             public @event? Payload
@@ -81,11 +81,11 @@ partial record struct Orders<TKey>
                 var __old = _payload;
                 var __changing = _propertyChangingAsync;
                 if (__changing.Count != 0)
-                    await __changing.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(nameof(Payload), __old, value), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);
+                    await __changing.InvokeAsync(global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.Create<@event?>(nameof(Payload), __old, value), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);
                 _payload = value;
                 var __changed = _propertyChangedAsync;
                 if (__changed.Count != 0)
-                    await __changed.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(nameof(Payload), __old, value), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);
+                    await __changed.InvokeAsync(global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.Create<@event?>(nameof(Payload), __old, value), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);
             }
 
         }

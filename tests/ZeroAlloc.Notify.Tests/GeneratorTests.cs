@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
@@ -106,6 +107,35 @@ public class GeneratorTests
         var generator = new NotifyGenerator();
         var driver = CSharpGeneratorDriver.Create(generator).RunGenerators(compilation);
         GeneratorSnapshot.Verify(driver);
+    }
+
+    // The generated Raise methods are generic. Their type parameter must not reuse a name the
+    // class declares, or the compiler warns CS0693 in generated code and a consumer building with
+    // TreatWarningsAsErrors fails.
+    [Fact]
+    public void GenericClass_RaiseMethodTypeParameterDoesNotShadowTheClasses()
+    {
+        var compilation = CreateCompilation("""
+            #nullable enable
+            using ZeroAlloc.Notify;
+            [NotifyPropertyChangedAsync]
+            [NotifyPropertyChangingAsync]
+            public partial class Box<T, TValue>
+            {
+                [ObservableProperty]
+                private T? _item;
+
+                public System.Threading.Tasks.ValueTask Raise(T? oldValue, T? newValue)
+                    => RaisePropertyChangedAsync(nameof(Item), oldValue, newValue);
+            }
+            """);
+        CSharpGeneratorDriver.Create(new NotifyGenerator())
+            .RunGeneratorsAndUpdateCompilation(compilation, out var output, out _);
+
+        var diagnostics = output.GetDiagnostics()
+            .Where(d => d.Severity >= DiagnosticSeverity.Warning)
+            .Select(d => d.ToString());
+        Assert.Empty(diagnostics);
     }
 
     private static IEnumerable<MetadataReference> GetProjectReferences()

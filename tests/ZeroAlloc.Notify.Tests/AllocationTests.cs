@@ -3,8 +3,9 @@ using ZeroAlloc.TestHelpers;
 namespace ZeroAlloc.Notify.Tests;
 
 /// <summary>
-/// With no subscribers, a property change must not allocate: no event args object, and no
-/// boxing of a value-type old or new value. Args are created only when someone listens.
+/// A property change allocates nothing, with or without subscribers. The property event args
+/// are structs, and their old and new values are <see cref="PropertyValue"/>s, which keep a small
+/// value type inline instead of boxing it.
 /// </summary>
 public class AllocationTests
 {
@@ -52,18 +53,16 @@ public class AllocationTests
         }, "Raise*Async, no subscribers");
     }
 
-    // With a subscriber, the only allocation Notify adds is the event args object, 40 B on 64-bit,
-    // plus a box for each value-type old and new value. Making that allocation-free changes the
-    // public args shape and is tracked as next-major work in #237. These gates pin the cost so
-    // it cannot grow unnoticed, for sequential dispatch and for the default parallel dispatch,
-    // which on net8 used to add its own allocation in ZeroAlloc.AsyncEvents#229.
+    // With subscribers, a change still allocates nothing when the handlers complete synchronously,
+    // for sequential dispatch and for the default parallel dispatch. Before #237 the args were a
+    // 40 B class on 64-bit, plus a box for each value-type old and new value.
     [Fact]
-    public void SetSequentialStringProperty_OneChangedSubscriber_AllocatesOnlyTheArgs()
+    public void SetSequentialStringProperty_OneChangedSubscriber_DoesNotAllocate()
     {
         var vm = new AllocationViewModel();
         vm.PropertyChangedAsync += (_, _) => ValueTask.CompletedTask;
         var flip = false;
-        AllocationGate.AssertBudget(40, Iterations, () =>
+        AllocationGate.AssertBudget(0, Iterations, () =>
         {
             flip = !flip;
             Complete(vm.SetSequentialNameAsync(flip ? "a" : "b"));
@@ -71,23 +70,23 @@ public class AllocationTests
     }
 
     [Fact]
-    public void SetSequentialIntProperty_OneChangedSubscriber_AllocatesOnlyTheArgsAndBoxes()
+    public void SetSequentialIntProperty_OneChangedSubscriber_DoesNotAllocate()
     {
         var vm = new AllocationViewModel();
         vm.PropertyChangedAsync += (_, _) => ValueTask.CompletedTask;
         var i = 0;
-        AllocationGate.AssertBudget(88, Iterations, () => Complete(vm.SetSequentialCountAsync(++i)),
+        AllocationGate.AssertBudget(0, Iterations, () => Complete(vm.SetSequentialCountAsync(++i)),
             "SetSequentialCountAsync, one PropertyChanged subscriber");
     }
 
     [Fact]
-    public void SetStringProperty_FiveChangedSubscribers_AllocatesOnlyTheArgs()
+    public void SetStringProperty_FiveChangedSubscribers_DoesNotAllocate()
     {
         var vm = new AllocationViewModel();
         for (var h = 0; h < 5; h++)
             vm.PropertyChangedAsync += (_, _) => ValueTask.CompletedTask;
         var flip = false;
-        AllocationGate.AssertBudget(40, Iterations, () =>
+        AllocationGate.AssertBudget(0, Iterations, () =>
         {
             flip = !flip;
             Complete(vm.SetNameAsync(flip ? "a" : "b"));
@@ -95,14 +94,38 @@ public class AllocationTests
     }
 
     [Fact]
-    public void SetIntProperty_FiveChangedSubscribers_AllocatesOnlyTheArgsAndBoxes()
+    public void SetIntProperty_FiveChangedSubscribers_DoesNotAllocate()
     {
         var vm = new AllocationViewModel();
         for (var h = 0; h < 5; h++)
             vm.PropertyChangedAsync += (_, _) => ValueTask.CompletedTask;
         var i = 0;
-        AllocationGate.AssertBudget(88, Iterations, () => Complete(vm.SetCountAsync(++i)),
+        AllocationGate.AssertBudget(0, Iterations, () => Complete(vm.SetCountAsync(++i)),
             "SetCountAsync, five PropertyChanged subscribers, parallel dispatch");
+    }
+
+    [Fact]
+    public void SetIntProperty_ChangingAndChangedSubscribers_DoesNotAllocate()
+    {
+        var vm = new AllocationViewModel();
+        vm.PropertyChangingAsync += (_, _) => ValueTask.CompletedTask;
+        vm.PropertyChangedAsync += (_, _) => ValueTask.CompletedTask;
+        var i = 0;
+        AllocationGate.AssertBudget(0, Iterations, () => Complete(vm.SetCountAsync(++i)),
+            "SetCountAsync, one PropertyChanging and one PropertyChanged subscriber");
+    }
+
+    [Fact]
+    public void RaiseMethods_WithSubscribersAndValueTypeValues_DoNotAllocate()
+    {
+        var vm = new AllocationViewModel();
+        vm.PropertyChangingAsync += (_, _) => ValueTask.CompletedTask;
+        vm.PropertyChangedAsync += (_, _) => ValueTask.CompletedTask;
+        AllocationGate.AssertBudget(0, Iterations, () =>
+        {
+            Complete(vm.RaiseChanged("Count", 1, 2));
+            Complete(vm.RaiseChanging("Count", 1, 2));
+        }, "Raise*Async with int values, one subscriber each");
     }
 
     [Fact]

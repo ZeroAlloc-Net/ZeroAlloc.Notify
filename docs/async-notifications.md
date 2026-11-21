@@ -43,7 +43,7 @@ vm.PropertyChangedAsync += async (args, ct) =>
 {
     if (args.PropertyName == nameof(RegistrationViewModel.Email))
     {
-        await vm.ValidateEmailAsync((string)args.NewValue!, ct);
+        await vm.ValidateEmailAsync(args.NewValue.As<string>()!, ct);
     }
 };
 
@@ -211,7 +211,7 @@ public partial class CustomerViewModel
     {
         if (args.PropertyName == nameof(Email))
         {
-            var isValid = await _service.ValidateEmailAsync((string?)args.NewValue, ct);
+            var isValid = await _service.ValidateEmailAsync(args.NewValue.As<string>(), ct);
             // handle invalid email — see docs/validation.md for the INotifyDataErrorInfoAsync pattern
         }
     }

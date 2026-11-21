@@ -98,15 +98,15 @@ internal static class NotifyWriter
             WriteEventMember(sb, mode,
                 "global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs",
                 "_propertyChangedAsync", "PropertyChangedAsync",
-                "    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangedAsync(string propertyName, object? oldValue, object? newValue, global::System.Threading.CancellationToken ct = default)",
-                "new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(propertyName, oldValue, newValue)");
+                "    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangedAsync<__TValue>(string propertyName, __TValue oldValue, __TValue newValue, global::System.Threading.CancellationToken ct = default)",
+                "global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.Create(propertyName, oldValue, newValue)");
 
         if (model.NotifyPropertyChanging)
             WriteEventMember(sb, mode,
                 "global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs",
                 "_propertyChangingAsync", "PropertyChangingAsync",
-                "    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangingAsync(string propertyName, object? oldValue, object? newValue, global::System.Threading.CancellationToken ct = default)",
-                "new global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs(propertyName, oldValue, newValue)");
+                "    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangingAsync<__TValue>(string propertyName, __TValue oldValue, __TValue newValue, global::System.Threading.CancellationToken ct = default)",
+                "global::ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.Create(propertyName, oldValue, newValue)");
 
         if (model.NotifyCollectionChanged)
             WriteEventMember(sb, mode,
@@ -142,8 +142,8 @@ internal static class NotifyWriter
         sb.AppendLine("    }");
         sb.AppendLine("    #pragma warning restore MA0046");
         sb.AppendLine();
-        // With no subscribers the args object is never created. See WriteSetterRaise for why
-        // the handler is copied to a local before the check.
+        // With no subscribers the args are never created. See WriteSetterRaise for why the
+        // handler is copied to a local before the check.
         sb.AppendLine(raiseSignature);
         sb.AppendLine("    {");
         sb.AppendLine($"        var __handler = {fieldName};");
@@ -182,7 +182,9 @@ internal static class NotifyWriter
 
     /// <summary>
     /// Raises a change event from a setter. The subscriber check comes first, so with nobody
-    /// listening neither the args object nor the boxed old and new values are allocated.
+    /// listening the args are not even created. With subscribers nothing is allocated either: the
+    /// args are a struct, and <c>Create</c> stores the old and new values as typed
+    /// <c>PropertyValue</c>s, which keep a small value type inline instead of boxing it.
     /// <para>
     /// The handler is copied to a local once and both the check and the invoke use that copy,
     /// the same single read the event raise in AsyncEventHandler does. Registration swaps the
@@ -204,6 +206,6 @@ internal static class NotifyWriter
             : "";
         sb.AppendLine($"        var {localName} = {fieldName};");
         sb.AppendLine($"        if ({localName}.Count != 0)");
-        sb.AppendLine($"            await {localName}.InvokeAsync(new {argsType}(nameof({field.PropertyName}), __old, value), {modeOverride}ct).ConfigureAwait(false);");
+        sb.AppendLine($"            await {localName}.InvokeAsync({argsType}.Create<{field.TypeName}>(nameof({field.PropertyName}), __old, value), {modeOverride}ct).ConfigureAwait(false);");
     }
 }

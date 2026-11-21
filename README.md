@@ -12,7 +12,7 @@ Source-generated, awaitable `INotifyPropertyChanged` for .NET: `await vm.SetName
 ## Why ZeroAlloc.Notify
 
 - **Setters you can `await`.** Async validation, saving or coordinated state changes complete before the setter returns. CommunityToolkit.Mvvm and PropertyChanged.Fody only offer synchronous notifications.
-- **0 B when nobody listens.** The generated setter creates event args only when there are subscribers; tests assert 0 B for reference-type and value-type properties. With subscribers, a change costs its args object, 40 B, plus a box per value-type value; tests pin both figures.
+- **0 B per change, with or without subscribers.** The property event args are structs, and their old and new values keep a small value type such as `int` inline instead of boxing it; tests assert 0 B for reference-type and value-type properties, for sequential and parallel dispatch.
 - **Works under NativeAOT and trimming.** All plumbing is generated at compile time; CI publishes and runs a NativeAOT sample on every build.
 - **Compile-time diagnostics.** A class that is not `partial`, a record, or a stray `[ObservableProperty]` is reported by the build, not discovered at runtime.
 
@@ -57,7 +57,8 @@ The generator writes the `Name` and `Age` properties, the `SetNameAsync` and `Se
 - **Async validation** through `INotifyDataErrorInfoAsync`. [Validation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/validation.md)
 - **Parallel handlers by default, sequential on request** with `[InvokeSequentially]`, and a `CancellationToken` on every setter. [Async notifications](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/async-notifications.md)
 - **Build-time checks**, ZAN001 to ZAN006. [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/diagnostics.md)
-- **Targets** `netstandard2.0`, `net8.0`, `net10.0` and `net11.0`.
+- **Typed old and new values**: `args.NewValue.As<int>()` reads a value without boxing it. [Observable properties](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/observable-properties.md#reading-old-and-new-values)
+- **Targets** `net10.0` and `net11.0`.
 - **Built on [ZeroAlloc.AsyncEvents](https://github.com/ZeroAlloc-Net/ZeroAlloc.AsyncEvents)**, the async event primitive behind every handler.
 
 ## Performance
@@ -69,9 +70,9 @@ One property change with five handlers attached, .NET 10, all four libraries in 
 | Manual `INotifyPropertyChanged` | 1.00 | 24 B | no |
 | PropertyChanged.Fody | 0.93 | 0 B | no |
 | CommunityToolkit.Mvvm | 1.81 | 0 B | no |
-| **ZeroAlloc.Notify** | **1.47** | **40 B** | **yes** |
+| **ZeroAlloc.Notify** | **1.47** | **0 B** | **yes** |
 
-Awaitable handlers have a cost: Notify is slower than hand-written code and Fody, and allocates its args object when someone listens. For purely synchronous view models, Fody is the faster choice. The .NET 8 ratios are in the performance doc. Allocation breakdown, design notes and full numbers: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md).
+Awaitable handlers have a cost: Notify is slower than hand-written code and Fody. For purely synchronous view models, Fody is the faster choice. Notify's ratio was measured with version 1.3; its 0 B is the 2.0 figure, gated by the test suite, since the 40 B args object of 1.x became a struct. Allocation breakdown, design notes and full numbers: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/blob/main/docs/performance.md).
 
 ## Learn more
 

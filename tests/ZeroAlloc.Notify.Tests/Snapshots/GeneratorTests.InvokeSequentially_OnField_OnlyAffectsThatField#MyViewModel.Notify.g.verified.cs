@@ -20,11 +20,11 @@ partial class MyViewModel : global::ZeroAlloc.Notify.INotifyPropertyChangedAsync
     }
     #pragma warning restore MA0046
 
-    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangedAsync(string propertyName, object? oldValue, object? newValue, global::System.Threading.CancellationToken ct = default)
+    protected global::System.Threading.Tasks.ValueTask RaisePropertyChangedAsync<__TValue>(string propertyName, __TValue oldValue, __TValue newValue, global::System.Threading.CancellationToken ct = default)
     {
         var __handler = _propertyChangedAsync;
         if (__handler.Count == 0) return default;
-        return __handler.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(propertyName, oldValue, newValue), ct);
+        return __handler.InvokeAsync(global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.Create(propertyName, oldValue, newValue), ct);
     }
 
     public string Name
@@ -40,7 +40,7 @@ partial class MyViewModel : global::ZeroAlloc.Notify.INotifyPropertyChangedAsync
         _name = value;
         var __changed = _propertyChangedAsync;
         if (__changed.Count != 0)
-            await __changed.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(nameof(Name), __old, value), ct).ConfigureAwait(false);
+            await __changed.InvokeAsync(global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.Create<string>(nameof(Name), __old, value), ct).ConfigureAwait(false);
     }
 
     public int Count
@@ -56,7 +56,7 @@ partial class MyViewModel : global::ZeroAlloc.Notify.INotifyPropertyChangedAsync
         _count = value;
         var __changed = _propertyChangedAsync;
         if (__changed.Count != 0)
-            await __changed.InvokeAsync(new global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs(nameof(Count), __old, value), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);
+            await __changed.InvokeAsync(global::ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.Create<int>(nameof(Count), __old, value), global::ZeroAlloc.AsyncEvents.InvokeMode.Sequential, ct).ConfigureAwait(false);
     }
 
 }

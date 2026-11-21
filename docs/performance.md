@@ -84,7 +84,7 @@ All async paths return `ValueTask`. When there are no subscribers, or every hand
 
 ### 3. Struct Event Args with Unboxed Values
 
-The property event args, `AsyncPropertyChangedEventArgs` and `AsyncPropertyChangingEventArgs`, are `readonly struct`s, so a raise allocates nothing. Their old and new values are `PropertyValue`s:
+The property event args, `AsyncPropertyChangedEventArgs` and `AsyncPropertyChangingEventArgs`, are `readonly struct`s, so the args themselves never allocate. Their old and new values are `PropertyValue`s:
 
 ```csharp
 public readonly struct AsyncPropertyChangedEventArgs
@@ -123,7 +123,7 @@ Results are output to `BenchmarkDotNet.Artifacts/results/`.
 
 ### vs INotifyPropertyChanged (Standard INPC)
 
-- **Allocation**: INPC allocates a 24 B args object per notification; ZeroAlloc.Notify allocates nothing, with or without subscribers
+- **Allocation**: INPC allocates a 24 B args object per notification; ZeroAlloc.Notify allocates nothing, with or without subscribers, under the conditions in the [overview](#overview)
 - **Speed**: the async path took 1.47 times as long as the sync INPC baseline on .NET 10 in the 1.3 measurement; the cost buys full await semantics
 - **Async support**: INPC has no built-in async support; ZeroAlloc.Notify has first-class `ValueTask` support
 - **Full await**: INPC cannot await handlers; ZeroAlloc can
@@ -131,20 +131,20 @@ Results are output to `BenchmarkDotNet.Artifacts/results/`.
 ### vs Reactive Extensions (Rx)
 
 - **Startup**: ZeroAlloc compiles all dispatch statically; Rx uses dynamic subscription
-- **Allocation**: ZeroAlloc: 0 B per property change; Rx: Often 200+ bytes depending on operators
+- **Allocation**: ZeroAlloc: 0 B per property change under the conditions in the [overview](#overview); Rx: Often 200+ bytes depending on operators
 - **Use case**: ZeroAlloc is optimized for MVVM; Rx is general-purpose event streaming
 
 ### vs PropertyChanged.Fody
 
 - **Dispatch**: Fody rewrites IL at build time; ZeroAlloc uses Roslyn source generation
-- **Allocation**: both are 0 B per property change; Fody is sync only
+- **Allocation**: both are 0 B per property change, ZeroAlloc under the conditions in the [overview](#overview); Fody is sync only
 - **Async support**: Fody has no async handler dispatch; ZeroAlloc has first-class `ValueTask`
 - **Full await**: Fody cannot await handlers; ZeroAlloc can
 
 ### vs MVVM Toolkit (CommunityToolkit.Mvvm)
 
 - **Async support**: MVVM Toolkit has limited async support; ZeroAlloc has first-class async
-- **Allocation pattern**: both allocate 0 B per property change; ZeroAlloc's handlers are awaited
+- **Allocation pattern**: both allocate 0 B per property change, ZeroAlloc under the conditions in the [overview](#overview); ZeroAlloc's handlers are awaited
 - **API surface**: MVVM Toolkit is broader (relaycommand, state management); ZeroAlloc is focused on notifications
 - **Integration**: ZeroAlloc works standalone; MVVM Toolkit is part of a larger ecosystem
 
@@ -160,7 +160,7 @@ dotnet publish -c Release -p PublishAot=true
 
 When using ZeroAlloc.Notify in your application, you'll notice:
 - **Heap allocations**: none for property changes, with or without subscribers, as long as the handlers complete synchronously and the property type fits a `PropertyValue` inline or is a reference type
-- **GC pressure**: from your handlers, not from the notifications
+- **GC pressure**: from your handlers, and from the boxed fallback for large or reference-containing structs, not from the notifications themselves
 - **Throughput**: Higher sustained throughput when handling millions of notifications
 
 ## Optimization Guidelines

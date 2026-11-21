@@ -13,3 +13,14 @@ ZAN003  | ZeroAlloc.Notify | Error    | Class name differs only in case from ano
 ZAN004  | ZeroAlloc.Notify | Warning  | Notify class is not partial
 ZAN005  | ZeroAlloc.Notify | Warning  | Notify attributes are not supported on records
 ZAN006  | ZeroAlloc.Notify | Warning  | [ObservableProperty] field in a class without a Notify attribute
+
+## Release 2.0.0
+
+### Changed Rules
+
+Rule ID | New Category     | New Severity | Old Category     | Old Severity | Notes
+--------|------------------|--------------|------------------|--------------|-------------------------------------------------------
+ZAN001  | ZeroAlloc.Notify | Error        | ZeroAlloc.Notify | Warning      | Containing type of a Notify class is not partial
+ZAN004  | ZeroAlloc.Notify | Error        | ZeroAlloc.Notify | Warning      | Notify class is not partial
+ZAN005  | ZeroAlloc.Notify | Error        | ZeroAlloc.Notify | Warning      | Notify attributes are not supported on records
+ZAN006  | ZeroAlloc.Notify | Error        | ZeroAlloc.Notify | Warning      | [ObservableProperty] field in a class without a Notify attribute

@@ -215,7 +215,7 @@ public partial class ContentViewModel
 
 ## Performance Characteristics
 
-- **Allocation**: 0 B, with or without subscribers, when the handlers complete synchronously. The args are structs, and a value type of up to 16 bytes without references, such as `int` or `Guid`, is held inline instead of boxed. A larger struct, or one that contains references, is boxed once per value
+- **Allocation**: for a reference-type property, or a value type of up to 16 bytes without references such as `int` or `Guid`, 0 B with or without subscribers when the handlers complete synchronously: the args are structs, and such a value type is held inline instead of boxed. A larger struct, or one that contains references, is boxed once per value
 - **Dispatch**: Direct static method call, no virtual dispatch
 - **Speed**: with five handlers, a change takes about 1.5 times as long as a hand-written `INotifyPropertyChanged`
 

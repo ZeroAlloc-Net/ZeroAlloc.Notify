@@ -264,7 +264,7 @@ public class NestedClassTests
 
         var diagnostic = Assert.Single(result.GeneratorDiagnostics);
         Assert.Equal("ZAN001", diagnostic.Id);
-        Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
         Assert.Equal(
             "The notification members of class 'N.Outer.Foo' are not generated because its containing type 'N.Outer' is not partial",
             diagnostic.GetMessage(System.Globalization.CultureInfo.InvariantCulture));

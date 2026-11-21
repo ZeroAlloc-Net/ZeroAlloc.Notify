@@ -1,17 +1,18 @@
 # Diagnostics
 
 The ZeroAlloc.Notify source generator reports these diagnostics. All of them use the `ZAN` prefix.
-Each one means that nothing is generated for the class it points at. Every other class in the
-project is still generated.
+Each one means that nothing is generated for the class it points at, and each one is an error, so
+the build fails instead of passing without the generated members. Every other class in the project
+is still generated. ZAN001, ZAN004, ZAN005 and ZAN006 were warnings before version 2.0.0.
 
 | ID | Severity | Title |
 |----|----------|-------|
-| [ZAN001](#zan001) | Warning | Containing type of a Notify class is not partial |
+| [ZAN001](#zan001) | Error | Containing type of a Notify class is not partial |
 | [ZAN002](#zan002) | Error | File-local Notify class is not generated |
 | [ZAN003](#zan003) | Error | Class name differs only in case from another Notify class |
-| [ZAN004](#zan004) | Warning | Notify class is not partial |
-| [ZAN005](#zan005) | Warning | Notify attributes are not supported on records |
-| [ZAN006](#zan006) | Warning | `[ObservableProperty]` field in a class without a Notify attribute |
+| [ZAN004](#zan004) | Error | Notify class is not partial |
+| [ZAN005](#zan005) | Error | Notify attributes are not supported on records |
+| [ZAN006](#zan006) | Error | `[ObservableProperty]` field in a class without a Notify attribute |
 
 ## ZAN001
 
@@ -46,8 +47,8 @@ public partial class Orders
 }
 ```
 
-The diagnostic is a warning, so a build that does not use the generated members keeps compiling.
-Under `TreatWarningsAsErrors` it fails the build.
+ZAN001 is an error, so the build fails until the containing types are partial. Before version 2.0.0
+it was a warning, and a build that did not use the generated members kept compiling without them.
 
 ## ZAN002
 
@@ -92,7 +93,7 @@ Fix it by renaming one of the classes, or by moving it to another namespace or c
 
 The generator adds the events, properties and setters to the class in a separate file, which
 only a `partial` class allows. A class with a Notify attribute that is not `partial` gets the
-warning ZAN004, and nothing is generated for it.
+error ZAN004, and nothing is generated for it.
 
 ```csharp
 [NotifyPropertyChangedAsync]
@@ -116,7 +117,7 @@ public partial class OrderViewModel
 
 **Notify attributes are not supported on records.**
 
-The generator only supports classes. A `record` with a Notify attribute gets the warning ZAN005,
+The generator only supports classes. A `record` with a Notify attribute gets the error ZAN005,
 and nothing is generated for it, whether or not it is `partial`. A `record struct` cannot carry
 the attributes at all; the compiler reports CS0592.
 
@@ -137,7 +138,7 @@ Fix it by making the type a `partial class`.
 The generator reads `[ObservableProperty]` fields only in a class that carries one of the
 class-level Notify attributes: `[NotifyPropertyChangedAsync]`, `[NotifyPropertyChangingAsync]`,
 `[NotifyCollectionChangedAsync]` or `[NotifyDataErrorInfoAsync]`. In any other class, each such
-field gets the warning ZAN006 on its name, and no property or setter is generated for it.
+field gets the error ZAN006 on its name, and no property or setter is generated for it.
 `[InvokeSequentially]` alone does not count.
 
 ```csharp

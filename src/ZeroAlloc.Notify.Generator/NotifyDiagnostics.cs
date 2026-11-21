@@ -20,7 +20,7 @@ internal static class NotifyDiagnostics
         title: "Containing type of a Notify class is not partial",
         messageFormat: "The notification members of class '{0}' are not generated because its containing type '{1}' is not partial",
         category: Category,
-        defaultSeverity: DiagnosticSeverity.Warning,
+        defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         helpLinkUri: HelpLink + "zan001");
 
@@ -59,7 +59,7 @@ internal static class NotifyDiagnostics
         title: "Notify class is not partial",
         messageFormat: "The notification members of class '{0}' are not generated because it is not partial",
         category: Category,
-        defaultSeverity: DiagnosticSeverity.Warning,
+        defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         helpLinkUri: HelpLink + "zan004");
 
@@ -71,7 +71,7 @@ internal static class NotifyDiagnostics
         title: "Notify attributes are not supported on records",
         messageFormat: "The notification members of record '{0}' are not generated because Notify attributes are not supported on records",
         category: Category,
-        defaultSeverity: DiagnosticSeverity.Warning,
+        defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         helpLinkUri: HelpLink + "zan005");
 
@@ -84,7 +84,7 @@ internal static class NotifyDiagnostics
         title: "[ObservableProperty] field in a class without a Notify attribute",
         messageFormat: "No property is generated for field '{0}' because its class '{1}' has no Notify attribute such as [NotifyPropertyChangedAsync]",
         category: Category,
-        defaultSeverity: DiagnosticSeverity.Warning,
+        defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         helpLinkUri: HelpLink + "zan006");
 }

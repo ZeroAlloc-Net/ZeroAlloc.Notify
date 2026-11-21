@@ -22,3 +22,5 @@ ZeroAlloc.Notify.PropertyValue.As<T>() -> T?
 ZeroAlloc.Notify.PropertyValue.PropertyValue() -> void
 ZeroAlloc.Notify.PropertyValue.ToObject() -> object?
 ZeroAlloc.Notify.PropertyValue.TryGet<T>(out T? value) -> bool
+ZeroAlloc.Notify.PropertyValue.ToString(string? format, System.IFormatProvider? formatProvider) -> string!
+ZeroAlloc.Notify.PropertyValue.TryFormat(System.Span<char> destination, out int charsWritten, System.ReadOnlySpan<char> format, System.IFormatProvider? provider) -> bool

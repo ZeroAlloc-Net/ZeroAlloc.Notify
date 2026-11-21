@@ -24,8 +24,14 @@ namespace ZeroAlloc.Notify;
 /// such as <see cref="object"/>, an interface or the other side of a nullable, boxes it, as does
 /// <see cref="ToObject"/>.
 /// </para>
+/// <para>
+/// The value formats with its own type's formatting: <see cref="ToString(string?, IFormatProvider?)"/>
+/// and <see cref="TryFormat"/> pass the format string and the format provider on to the value, so
+/// <c>$"{args.NewValue:N2}"</c> and <c>string.Create(CultureInfo.InvariantCulture, ...)</c> format it
+/// as they would format the value itself.
+/// </para>
 /// </remarks>
-public readonly struct PropertyValue
+public readonly struct PropertyValue : ISpanFormattable
 {
     // A reference-type value, a boxed value type, or the tag of the type stored in _inline.
     private readonly object? _object;
@@ -105,14 +111,51 @@ public readonly struct PropertyValue
     public object? ToObject() => _object is TypeTag tag ? tag.Box(_inline) : _object;
 
     /// <summary>
-    /// Formats the value with its own <see cref="object.ToString"/>. An inline value is not boxed when
-    /// its type overrides <see cref="object.ToString"/>, as the primitives, <see cref="decimal"/>,
-    /// <see cref="Guid"/> and <see cref="DateTime"/> do. An enum, or a struct that inherits
-    /// <see cref="object.ToString"/>, is boxed by the runtime for the call. A <see langword="null"/>
-    /// formats as an empty string.
+    /// Formats the value with its own <see cref="object.ToString"/>, as
+    /// <see cref="ToString(string?, IFormatProvider?)"/> does without a format or a provider.
+    /// A <see langword="null"/> formats as an empty string.
     /// </summary>
-    public override string ToString()
-        => (_object is TypeTag tag ? tag.Format(_inline) : _object?.ToString()) ?? string.Empty;
+    public override string ToString() => ToString(null, null);
+
+    /// <summary>
+    /// Formats the value with the given format and provider when its type implements
+    /// <see cref="IFormattable"/>, and with its own <see cref="object.ToString"/> otherwise. An inline
+    /// value is not boxed when its type implements the formatting itself, as the primitives,
+    /// <see cref="decimal"/>, <see cref="Guid"/>, <see cref="DateTime"/> and
+    /// <see cref="DateTimeOffset"/> do. An enum, or a struct that inherits its formatting, is boxed by
+    /// the runtime for the call, and so, on .NET 10 only, is a nullable stored inline such as
+    /// <c>int?</c>. A <see langword="null"/> formats as an empty string.
+    /// </summary>
+    public string ToString(string? format, IFormatProvider? formatProvider)
+        => _object switch
+        {
+            TypeTag tag => tag.Format(_inline, format, formatProvider),
+            IFormattable formattable => formattable.ToString(format, formatProvider),
+            null => null,
+            _ => _object.ToString(),
+        } ?? string.Empty;
+
+    /// <summary>
+    /// Formats the value into <paramref name="destination"/>, passing <paramref name="format"/> and
+    /// <paramref name="provider"/> on to the value. A value whose type implements
+    /// <see cref="ISpanFormattable"/> formats without allocating; any other value is formatted with
+    /// <see cref="ToString(string?, IFormatProvider?)"/> and copied. A <see langword="null"/> writes nothing.
+    /// </summary>
+    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+    {
+        switch (_object)
+        {
+            case TypeTag tag:
+                return tag.TryFormat(_inline, destination, out charsWritten, format, provider);
+            case ISpanFormattable formattable:
+                return formattable.TryFormat(destination, out charsWritten, format, provider);
+            case null:
+                charsWritten = 0;
+                return true;
+            default:
+                return CopyTo(_object is IFormattable plain ? plain.ToString(ToFormatString(format), provider) : _object.ToString(), destination, out charsWritten);
+        }
+    }
 
     private string DescribeType()
         => _object switch
@@ -121,6 +164,21 @@ public readonly struct PropertyValue
             null => "null",
             _ => _object.GetType().ToString(),
         };
+
+    private static string? ToFormatString(ReadOnlySpan<char> format) => format.IsEmpty ? null : format.ToString();
+
+    private static bool CopyTo(string? text, Span<char> destination, out int charsWritten)
+    {
+        var span = text.AsSpan();
+        if (span.TryCopyTo(destination))
+        {
+            charsWritten = span.Length;
+            return true;
+        }
+
+        charsWritten = 0;
+        return false;
+    }
 
     // The inline storage is passed by value: 16 bytes, and it keeps the readonly field unaliased.
     private static T Read<T>(InlineStorage inline)
@@ -139,7 +197,9 @@ public readonly struct PropertyValue
 
         public abstract object Box(InlineStorage inline);
 
-        public abstract string? Format(InlineStorage inline);
+        public abstract string? Format(InlineStorage inline, string? format, IFormatProvider? provider);
+
+        public abstract bool TryFormat(InlineStorage inline, Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider);
     }
 
     private sealed class TypeTag<T> : TypeTag
@@ -150,6 +210,23 @@ public readonly struct PropertyValue
 
         public override object Box(InlineStorage inline) => Read<T>(inline)!;
 
-        public override string? Format(InlineStorage inline) => Read<T>(inline)!.ToString();
+        // The casts from T to the interfaces compile to constrained calls, which do not box a type
+        // that implements the interface itself, the pattern DefaultInterpolatedStringHandler uses.
+        public override string? Format(InlineStorage inline, string? format, IFormatProvider? provider)
+        {
+            var value = Read<T>(inline);
+            return value is IFormattable
+                ? ((IFormattable)value).ToString(format, provider)
+                : value!.ToString();
+        }
+
+        public override bool TryFormat(InlineStorage inline, Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+        {
+            var value = Read<T>(inline);
+            if (value is ISpanFormattable)
+                return ((ISpanFormattable)value).TryFormat(destination, out charsWritten, format, provider);
+
+            return CopyTo(Format(inline, ToFormatString(format), provider), destination, out charsWritten);
+        }
     }
 }

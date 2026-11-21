@@ -16,6 +16,31 @@ public class PropertyValueTests
     [StructLayout(LayoutKind.Auto)]
     private readonly record struct Large(long A, long B, long C);
 
+    private sealed class Plain
+    {
+        public override string ToString() => "plain";
+    }
+
+    // Keeps a measured allocation alive, so the JIT cannot remove it.
+    private static object? s_sink;
+    private static PropertyValue s_valueSink;
+
+    private static CultureInfo CommaDecimalCulture()
+    {
+        // Built from the invariant culture, so it works with invariant globalization too.
+        var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+        culture.NumberFormat.NumberDecimalSeparator = ",";
+        culture.NumberFormat.NumberGroupSeparator = ".";
+        return culture;
+    }
+
+    private static string Format(PropertyValue value, string format, IFormatProvider? provider)
+    {
+        Span<char> buffer = stackalloc char[64];
+        Assert.True(value.TryFormat(buffer, out var written, format, provider));
+        return buffer[..written].ToString();
+    }
+
     [Fact]
     public void Int_RoundTrips()
     {
@@ -172,7 +197,8 @@ public class PropertyValueTests
     {
         var value = default(PropertyValue);
         Assert.Null(value.As<object>());
-        Assert.Equal("", value.ToString());
+        Assert.Equal("", value.ToString(null, CultureInfo.InvariantCulture));
+        Assert.Equal("", ((object)value).ToString());
     }
 
     [Fact]
@@ -186,21 +212,155 @@ public class PropertyValueTests
     [Fact]
     public void ToString_FormatsTheValue()
     {
+        var invariant = CultureInfo.InvariantCulture;
+        Assert.Equal("42", PropertyValue.From(42).ToString(null, invariant));
+        Assert.Equal("1.5", PropertyValue.From(1.5).ToString(null, invariant));
+        Assert.Equal("Green", PropertyValue.From(Color.Green).ToString(null, invariant));
+        Assert.Equal("text", PropertyValue.From("text").ToString(null, invariant));
+        Assert.Equal("", PropertyValue.From<int?>(null).ToString(null, invariant));
+        Assert.Equal("", PropertyValue.From<string?>(null).ToString(null, invariant));
+    }
+
+    [Fact]
+    public void Interpolation_HonoursTheFormatString()
+    {
+        Assert.Equal("1.50", string.Create(CultureInfo.InvariantCulture, $"{PropertyValue.From(1.5m):N2}"));
+        Assert.Equal("1,234.50", string.Create(CultureInfo.InvariantCulture, $"{PropertyValue.From(1234.5):N2}"));
+        Assert.Equal("2026-11-21", $"{PropertyValue.From(new DateTime(2026, 11, 21, 10, 30, 0, DateTimeKind.Utc)):yyyy-MM-dd}");
+        Assert.Equal("002A", $"{PropertyValue.From(42):X4}");
+        Assert.Equal("1", $"{PropertyValue.From(Color.Green):D}");
+    }
+
+    [Fact]
+    public void Formatting_HonoursTheProviderUnderACommaDecimalCulture()
+    {
         var culture = CultureInfo.CurrentCulture;
         try
         {
-            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-            Assert.Equal("42", PropertyValue.From(42).ToString());
-            Assert.Equal("1.5", PropertyValue.From(1.5).ToString());
-            Assert.Equal("Green", PropertyValue.From(Color.Green).ToString());
-            Assert.Equal("text", PropertyValue.From("text").ToString());
-            Assert.Equal("", PropertyValue.From<int?>(null).ToString());
-            Assert.Equal("", PropertyValue.From<string?>(null).ToString());
+            CultureInfo.CurrentCulture = CommaDecimalCulture();
+            var value = PropertyValue.From(1.5m);
+
+            // ToString() without arguments, as an object-typed consumer such as data binding calls it.
+            Assert.Equal("1,5", ((object)value).ToString());
+            Assert.Equal("1,5", $"{value}");
+            Assert.Equal("1.5", string.Create(CultureInfo.InvariantCulture, $"{value}"));
+            Assert.Equal("1.5", string.Format(CultureInfo.InvariantCulture, "{0}", value));
+            Assert.Equal("1.50", string.Format(CultureInfo.InvariantCulture, "{0:N2}", value));
+            Assert.Equal("1.5", value.ToString(null, CultureInfo.InvariantCulture));
         }
         finally
         {
             CultureInfo.CurrentCulture = culture;
         }
+    }
+
+    [Fact]
+    public void Formatting_HonoursFormatAndProviderForBoxedValues()
+    {
+        // Guid? and decimal? are boxed, so they format through the boxed value's own interfaces.
+        var guid = Guid.NewGuid();
+        Assert.Equal(guid.ToString("N"), $"{PropertyValue.From<Guid?>(guid):N}");
+        Assert.Equal("1.50", string.Create(CultureInfo.InvariantCulture, $"{PropertyValue.From<decimal?>(1.5m):N2}"));
+        Assert.Equal("1,50", PropertyValue.From<decimal?>(1.5m).ToString("N2", CommaDecimalCulture()));
+        Assert.Equal(guid.ToString("D"), Format(PropertyValue.From<Guid?>(guid), "D", null));
+    }
+
+    [Fact]
+    public void TryFormat_WritesTheFormattedValue()
+    {
+        var invariant = CultureInfo.InvariantCulture;
+        Assert.Equal("1.50", Format(PropertyValue.From(1.5m), "N2", invariant));
+        Assert.Equal("1,50", Format(PropertyValue.From(1.5m), "N2", CommaDecimalCulture()));
+        Assert.Equal("Green", Format(PropertyValue.From(Color.Green), "", invariant));
+        Assert.Equal("text", Format(PropertyValue.From("text"), "", invariant));
+        Assert.Equal("plain", Format(PropertyValue.From(new Plain()), "", invariant));
+        Assert.Equal("(1, 2)", Format(PropertyValue.From((1, 2)), "", invariant));
+        Assert.Equal("", Format(PropertyValue.From<int?>(null), "", invariant));
+        Assert.Equal("", Format(default, "N2", invariant));
+    }
+
+    [Fact]
+    public void TryFormat_ReturnsFalseWhenTheDestinationIsTooSmall()
+    {
+        Span<char> buffer = stackalloc char[2];
+        Assert.False(PropertyValue.From(123456).TryFormat(buffer, out var written, default, CultureInfo.InvariantCulture));
+        Assert.Equal(0, written);
+        Assert.False(PropertyValue.From("text").TryFormat(buffer, out written, default, null));
+        Assert.Equal(0, written);
+        Assert.False(PropertyValue.From(new Plain()).TryFormat(buffer, out written, default, null));
+        Assert.Equal(0, written);
+    }
+
+    [Fact]
+    public void ToStringWithFormat_FormatsReferenceAndNullValues()
+    {
+        Assert.Equal("text", PropertyValue.From("text").ToString("N2", CultureInfo.InvariantCulture));
+        Assert.Equal("plain", PropertyValue.From(new Plain()).ToString(null, null));
+        Assert.Equal("", PropertyValue.From<string?>(null).ToString("N2", null));
+        Assert.Equal("Small { X = 1, Y = 2 }", PropertyValue.From(new Small(1, 2)).ToString("N2", CultureInfo.InvariantCulture));
+    }
+
+    [Fact]
+    public void ToString_AllocatesOnlyTheResultString()
+    {
+        var number = 123456;
+        var amount = 12.5m;
+        var guid = Guid.NewGuid();
+        var date = new DateTime(2026, 11, 21, 10, 30, 0, DateTimeKind.Utc);
+        var invariant = CultureInfo.InvariantCulture;
+        AllocationGate.AssertNoMoreThan(10_000,
+            () => s_sink = number.ToString(invariant),
+            () => s_sink = PropertyValue.From(number).ToString(null, invariant),
+            "PropertyValue.ToString for an int");
+        AllocationGate.AssertNoMoreThan(10_000,
+            () => s_sink = amount.ToString("N2", invariant),
+            () => s_sink = PropertyValue.From(amount).ToString("N2", invariant),
+            "PropertyValue.ToString for a decimal");
+        AllocationGate.AssertNoMoreThan(10_000,
+            () => s_sink = guid.ToString("D", invariant),
+            () => s_sink = PropertyValue.From(guid).ToString("D", invariant),
+            "PropertyValue.ToString for a Guid");
+        AllocationGate.AssertNoMoreThan(10_000,
+            () => s_sink = date.ToString("O", invariant),
+            () => s_sink = PropertyValue.From(date).ToString("O", invariant),
+            "PropertyValue.ToString for a DateTime");
+    }
+
+    [Fact]
+    public void TryFormat_InlineValues_DoesNotAllocate()
+    {
+        var guid = Guid.NewGuid();
+        var date = new DateTime(2026, 11, 21, 10, 30, 0, DateTimeKind.Utc);
+        var offset = new DateTimeOffset(date);
+        var invariant = CultureInfo.InvariantCulture;
+        AllocationGate.AssertBudget(0, 10_000, () =>
+        {
+            Span<char> buffer = stackalloc char[64];
+            _ = PropertyValue.From(123456).TryFormat(buffer, out _, "N0", invariant);
+            _ = PropertyValue.From(12.5m).TryFormat(buffer, out _, "N2", invariant);
+            _ = PropertyValue.From(1.5).TryFormat(buffer, out _, default, invariant);
+            _ = PropertyValue.From(guid).TryFormat(buffer, out _, "N", invariant);
+            _ = PropertyValue.From(date).TryFormat(buffer, out _, "O", invariant);
+            _ = PropertyValue.From(offset).TryFormat(buffer, out _, "O", invariant);
+        }, "PropertyValue.TryFormat for inline values");
+    }
+
+    [Fact]
+    public void TryFormat_InlineNullable_BoxesOnlyOnDotNet10()
+    {
+#if NET11_0_OR_GREATER
+        const long expected = 0;
+#else
+        // The .NET 10 JIT boxes a Nullable<T> for the interface call that formats it: one 24 B box
+        // of the int. The .NET 11 JIT calls the underlying value's TryFormat without boxing.
+        const long expected = 24;
+#endif
+        var invariant = CultureInfo.InvariantCulture;
+        Assert.Equal(expected, AllocationGate.MeasureBytesPerCall(10_000, () =>
+        {
+            Span<char> buffer = stackalloc char[16];
+            _ = PropertyValue.From<int?>(7).TryFormat(buffer, out _, default, invariant);
+        }));
     }
 
     [Fact]
@@ -231,13 +391,35 @@ public class PropertyValueTests
     {
         var text = "text";
         var guid = Guid.NewGuid();
+        var date = new DateTime(2026, 11, 21, 10, 30, 0, DateTimeKind.Utc);
+        var offset = new DateTimeOffset(date);
         AllocationGate.AssertBudget(0, 10_000, () =>
         {
             _ = PropertyValue.From(42).As<int>();
             _ = PropertyValue.From(12.5m).As<decimal>();
             _ = PropertyValue.From(guid).As<Guid>();
+            _ = PropertyValue.From(date).As<DateTime>();
+            _ = PropertyValue.From(offset).As<DateTimeOffset>();
+            _ = PropertyValue.From(Color.Green).As<Color>();
             _ = PropertyValue.From<int?>(7).As<int?>();
+            _ = PropertyValue.From<DateTime?>(date).As<DateTime?>();
             _ = PropertyValue.From(text).As<string>();
         }, "PropertyValue.From and As for inline and reference values");
+    }
+
+    [Fact]
+    public void From_ValueTooLargeToInline_BoxesOncePerValue()
+    {
+        var guid = Guid.NewGuid();
+
+        // One box of the Guid on 64-bit: an 8 B object header, an 8 B method table pointer and the
+        // 16 B value. Reading it back as its own type does not allocate again.
+        Assert.Equal(32, AllocationGate.MeasureBytesPerCall(10_000, () => s_valueSink = PropertyValue.From<Guid?>(guid)));
+        Assert.Equal(32, AllocationGate.MeasureBytesPerCall(10_000, () =>
+        {
+            s_valueSink = PropertyValue.From<Guid?>(guid);
+            _ = s_valueSink.As<Guid?>();
+            _ = s_valueSink.As<Guid>();
+        }));
     }
 }

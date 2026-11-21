@@ -68,14 +68,11 @@ public readonly struct PropertyValue
             }
 
             // Only a reference type, such as object or an interface, can hold a boxed inline value.
-            if (!typeof(T).IsValueType)
+            // An inline value is never null: From stores a null as no value.
+            if (!typeof(T).IsValueType && tag.Box(_inline) is T boxed)
             {
-                var boxed = tag.Box(_inline);
-                if (boxed is null || boxed is T)
-                {
-                    value = (T?)boxed;
-                    return true;
-                }
+                value = boxed;
+                return true;
             }
 
             value = default;
@@ -135,7 +132,7 @@ public readonly struct PropertyValue
     {
         public abstract Type Type { get; }
 
-        public abstract object? Box(InlineStorage inline);
+        public abstract object Box(InlineStorage inline);
 
         public abstract string? Format(InlineStorage inline);
     }
@@ -146,8 +143,8 @@ public readonly struct PropertyValue
 
         public override Type Type => typeof(T);
 
-        public override object? Box(InlineStorage inline) => Read<T>(inline);
+        public override object Box(InlineStorage inline) => Read<T>(inline)!;
 
-        public override string? Format(InlineStorage inline) => Read<T>(inline)?.ToString();
+        public override string? Format(InlineStorage inline) => Read<T>(inline)!.ToString();
     }
 }

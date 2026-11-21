@@ -173,6 +173,21 @@ public class PropertyValueTests
     }
 
     [Fact]
+    public void As_WrongTypeForAReferenceValue_NamesBothTypes()
+    {
+        var ex = Assert.Throws<InvalidCastException>(() => PropertyValue.From("text").As<int>());
+        Assert.Contains("System.String", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("System.Int32", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void As_ValueTypeForANull_SaysNull()
+    {
+        var ex = Assert.Throws<InvalidCastException>(() => PropertyValue.From<string?>(null).As<int>());
+        Assert.Contains("a null", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void FromAndRead_InlineAndReferenceValues_DoNotAllocate()
     {
         var text = "text";

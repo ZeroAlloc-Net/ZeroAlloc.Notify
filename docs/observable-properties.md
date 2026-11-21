@@ -135,11 +135,22 @@ boxed form would match, whether it is stored inline or boxed: an `int` property 
 `long`, but a non-null `int?` reads as `int` and an `int` as `int?`, the same as `Guid?` and `Guid`.
 Reading an inline value as any other type than its own, such as `object`, an interface or the other
 side of a nullable, boxes it, and so does `ToObject()`. A `null` old or new value reads
-as `null` for every reference type and nullable value type. `ToString()` formats the value, so
-string interpolation works as before. It does not box a type that overrides `ToString()`, such as
-`int`, `decimal` or `Guid`; an enum or a struct that inherits `ToString()` is boxed for the call. Do not assign a `PropertyValue` to an
-`object` variable or compare it with `Assert.Equal(expected, args.NewValue)`: that boxes the
-`PropertyValue` itself, not the value. Use `As<T>()`.
+as `null` for every reference type and nullable value type.
+
+`PropertyValue` implements `IFormattable` and `ISpanFormattable` and hands the format string and
+the format provider on to the value, so `$"{args.NewValue:N2}"`,
+`string.Create(CultureInfo.InvariantCulture, $"{args.NewValue}")` and
+`string.Format(provider, "{0:yyyy-MM-dd}", args.NewValue)` format the value as they would format it
+directly. A `null` formats as an empty string. Formatting does not box a type that implements its own
+formatting, such as `int`, `decimal`, `Guid` or `DateTime`. An enum, a struct that inherits
+`ToString()`, and on .NET 10 a nullable that is stored inline, such as `int?`, are boxed for the
+call.
+
+Some code that compared the old `object?` values still compiles but no longer compares the value:
+`object? x = args.NewValue`, `Assert.Equal(raw, args.NewValue)`, `args.NewValue.Equals(raw)` and
+`object.Equals(args.NewValue, raw)` all box or compare the `PropertyValue` itself, so a comparison
+with the raw value is always false. Read the value instead: `args.NewValue.As<T>() == raw`, or
+`Assert.Equal(raw, args.NewValue.As<T>())`.
 
 ## Property Changed Events
 

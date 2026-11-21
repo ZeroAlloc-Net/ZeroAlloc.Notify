@@ -78,7 +78,7 @@ vm.PropertyChangedAsync += async (args, ct) =>
 {
     if (args.PropertyName == nameof(vm.Username))
     {
-        var taken = await _service.IsUsernameTakenAsync(args.NewValue.As<string>(), ct);
+        var taken = await _service.IsUsernameTakenAsync(args.NewValue.As<string>()!, ct);
         if (taken)
         {
             vm._errors[nameof(vm.Username)] = new List<string> { "Username already taken" };

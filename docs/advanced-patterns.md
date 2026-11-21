@@ -14,7 +14,7 @@ Handlers receive the token and should forward it to any awaited calls:
 ```csharp
 vm.PropertyChangedAsync += async (args, ct) =>
 {
-    await _service.SyncAsync(args.NewValue.As<string>(), ct); // ct forwarded from SetNameAsync
+    await _service.SyncAsync(args.NewValue.As<string>()!, ct); // ct forwarded from SetNameAsync
 };
 ```
 

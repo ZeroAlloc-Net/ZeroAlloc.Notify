@@ -211,7 +211,7 @@ public partial class CustomerViewModel
     {
         if (args.PropertyName == nameof(Email))
         {
-            var isValid = await _service.ValidateEmailAsync(args.NewValue.As<string>(), ct);
+            var isValid = await _service.ValidateEmailAsync(args.NewValue.As<string>()!, ct);
             // handle invalid email — see docs/validation.md for the INotifyDataErrorInfoAsync pattern
         }
     }

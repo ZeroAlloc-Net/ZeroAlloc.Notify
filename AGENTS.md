@@ -17,8 +17,8 @@ generator, `netstandard2.0`). `samples/` and `benchmarks/` do not ship.
 ## Build and test
 
 Prerequisites: the SDK pinned in `global.json` (11.0.100, roll forward to latest feature), plus the
-.NET 8, 10 and 11 runtimes. The tests target `net8.0`, `net10.0` and `net11.0`, and each needs its own
-runtime. Warnings are errors, including RS0016 and RS0017.
+.NET 10 runtime. The runtime library and the tests target `net10.0` and `net11.0`, and each test
+framework needs its own runtime. Warnings are errors, including RS0016 and RS0017.
 
 CI job `build` in `.github/workflows/ci.yml`:
 
@@ -48,7 +48,7 @@ Fast inner loop, verified locally:
 
 ```bash
 dotnet build -c Release -p:Version=1.2.3
-dotnet test --no-build -c Release -f net8.0
+dotnet test --no-build -c Release -f net11.0
 dotnet test --no-build -c Release -f net10.0 --filter "FullyQualifiedName~AllocationTests"
 ```
 
@@ -59,15 +59,17 @@ dotnet test --no-build -c Release -f net10.0 --filter "FullyQualifiedName~Alloca
   Shipped files are moved by the release workflow, never by hand.
 - The runtime library enables AOT analyzers on the concrete targets (`IsAotCompatible`), so reflection
   in `src/ZeroAlloc.Notify` fails the build.
-- Allocation budgets are pinned by `AllocationTests`: 0 B with no subscribers, 40 B for the args object
-  with a subscriber on 64-bit, plus a box per value-type value. A change to the setter hot path must keep
-  these figures or change the tests and the README claim together. This is the one exception to the
-  org rule that the hot path allocates nothing: the 40 B event-args object is the budget, not a defect.
+- Allocation budgets are pinned by `AllocationTests`: 0 B per change, with and without subscribers, for
+  reference-type properties and value types that `PropertyValue.From` stores inline, with synchronous
+  handlers. The property event args are `readonly struct`s whose values are `PropertyValue`s, which keep
+  a value type of up to 16 bytes without references inline. A struct larger than 16 bytes, or one that
+  contains references, takes the boxed fallback and is outside the 0 B budget. A change to the setter
+  hot path must keep 0 B for the inline and reference cases.
 - Generator code must stay incremental-cache friendly: model types are equatable (`EquatableArray`,
   `LocationInfo`), and `IncrementalCachingTests` guards it. Do not put `ISymbol` or `SyntaxNode` in a
   pipeline model.
 - Test code compiles generator input against a per-framework reference set
-  (`Basic.Reference.Assemblies.Net80`, `Net100`, `Net110`); a new target framework needs a matching
+  (`Basic.Reference.Assemblies.Net100`, `Net110`); a new target framework needs a matching
   reference package.
 
 <!-- org-core:start sha256=8faf417fa86f11bd8ad9bc98dfa4683fba44e440291e84c6cb9b0ec3ca0c0e7e (generated from docker-nuc scripts/agents-md/org-core-zeroalloc.md; do not edit here) -->

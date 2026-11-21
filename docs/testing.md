@@ -11,7 +11,7 @@ ZeroAlloc.Notify viewmodels are plain C# classes — no test framework adapter n
 public async Task SetNameAsync_RaisesPropertyChangedAsync()
 {
     var vm = new UserViewModel();
-    AsyncPropertyChangedEventArgs? captured = null;
+    AsyncPropertyChangedEventArgs? captured = null;   // a struct, so Nullable<T>
 
     vm.PropertyChangedAsync += (args, ct) =>
     {
@@ -22,8 +22,8 @@ public async Task SetNameAsync_RaisesPropertyChangedAsync()
     await vm.SetNameAsync("Alice");
 
     Assert.NotNull(captured);
-    Assert.Equal(nameof(vm.Name), captured.PropertyName);
-    Assert.Equal("Alice", captured.NewValue);
+    Assert.Equal(nameof(vm.Name), captured.Value.PropertyName);
+    Assert.Equal("Alice", captured.Value.NewValue.As<string>());
 }
 ```
 
@@ -40,8 +40,8 @@ public async Task SetNameAsync_ProvidesBothValues()
     string? oldCaptured = null, newCaptured = null;
     vm.PropertyChangedAsync += (args, ct) =>
     {
-        oldCaptured = args.OldValue?.ToString();
-        newCaptured = args.NewValue?.ToString();
+        oldCaptured = args.OldValue.As<string>();
+        newCaptured = args.NewValue.As<string>();
         return ValueTask.CompletedTask;
     };
 
@@ -118,7 +118,7 @@ public async Task SetEmailAsync_AddsError_WhenInvalid()
     vm.PropertyChangedAsync += async (args, ct) =>
     {
         if (args.PropertyName == nameof(vm.Email))
-            await vm.ValidateEmailAsync((string)args.NewValue!, ct);
+            await vm.ValidateEmailAsync(args.NewValue.As<string>()!, ct);
     };
 
     await vm.SetEmailAsync("not-an-email");

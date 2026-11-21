@@ -97,13 +97,13 @@ public class IntegrationTests
     public async Task SetNameAsync_ChangedEvent_ContainsOldAndNewValues()
     {
         var vm = new TestViewModel();
-        object? capturedOld = null;
-        object? capturedNew = null;
+        string? capturedOld = null;
+        string? capturedNew = null;
 
         vm.PropertyChangedAsync += (args, ct) =>
         {
-            capturedOld = args.OldValue;
-            capturedNew = args.NewValue;
+            capturedOld = args.OldValue.As<string>();
+            capturedNew = args.NewValue.As<string>();
             return ValueTask.CompletedTask;
         };
 
@@ -117,13 +117,13 @@ public class IntegrationTests
     public async Task SetNameAsync_ChangingEvent_ContainsOldAndNewValues()
     {
         var vm = new TestViewModel();
-        object? capturedOld = null;
-        object? capturedNew = null;
+        string? capturedOld = null;
+        string? capturedNew = null;
 
         vm.PropertyChangingAsync += (args, ct) =>
         {
-            capturedOld = args.OldValue;
-            capturedNew = args.NewValue;
+            capturedOld = args.OldValue.As<string>();
+            capturedNew = args.NewValue.As<string>();
             return ValueTask.CompletedTask;
         };
 
@@ -139,15 +139,56 @@ public class IntegrationTests
         var vm = new TestViewModel();
         await vm.SetNameAsync("first");
 
-        object? oldInChanging = null;
-        object? oldInChanged  = null;
+        string? oldInChanging = null;
+        string? oldInChanged  = null;
 
-        vm.PropertyChangingAsync += (args, ct) => { oldInChanging = args.OldValue; return ValueTask.CompletedTask; };
-        vm.PropertyChangedAsync  += (args, ct) => { oldInChanged  = args.OldValue; return ValueTask.CompletedTask; };
+        vm.PropertyChangingAsync += (args, ct) => { oldInChanging = args.OldValue.As<string>(); return ValueTask.CompletedTask; };
+        vm.PropertyChangedAsync  += (args, ct) => { oldInChanged  = args.OldValue.As<string>(); return ValueTask.CompletedTask; };
 
         await vm.SetNameAsync("second");
 
         Assert.Equal("first", oldInChanging); // not yet changed when Changing fires
         Assert.Equal("first", oldInChanged);  // same old value captured before assignment
+    }
+
+    [Fact]
+    public async Task SetCountAsync_ChangingAndChangedEvents_CarryTypedIntValues()
+    {
+        var vm = new TestViewModel();
+        await vm.SetCountAsync(3);
+
+        (string Name, int Old, int New)? changing = null;
+        (string Name, int Old, int New)? changed = null;
+        vm.PropertyChangingAsync += (args, ct) =>
+        {
+            changing = (args.PropertyName, args.OldValue.As<int>(), args.NewValue.As<int>());
+            return ValueTask.CompletedTask;
+        };
+        vm.PropertyChangedAsync += (args, ct) =>
+        {
+            changed = (args.PropertyName, args.OldValue.As<int>(), args.NewValue.As<int>());
+            return ValueTask.CompletedTask;
+        };
+
+        await vm.SetCountAsync(4);
+
+        Assert.Equal(("Count", 3, 4), changing);
+        Assert.Equal(("Count", 3, 4), changed);
+    }
+
+    [Fact]
+    public async Task SetCountAsync_ChangedEvent_ValueDoesNotReadAsAnotherValueType()
+    {
+        var vm = new TestViewModel();
+        var readAsLong = true;
+        vm.PropertyChangedAsync += (args, ct) =>
+        {
+            readAsLong = args.NewValue.TryGet<long>(out _);
+            return ValueTask.CompletedTask;
+        };
+
+        await vm.SetCountAsync(5);
+
+        Assert.False(readAsLong);
     }
 }

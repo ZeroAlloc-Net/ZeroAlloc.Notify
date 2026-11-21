@@ -69,7 +69,7 @@ public partial class PersonViewModel
         {
             if (args.PropertyName == nameof(Age))
             {
-                var newValue = (int)args.NewValue!;
+                var newValue = args.NewValue.As<int>();   // typed read, no unboxing
                 if (newValue < 0 || newValue > 150)
                     throw new ArgumentOutOfRangeException(nameof(Age), "Age must be 0-150");
                 Console.WriteLine($"Age changed from {args.OldValue} to {newValue}");
@@ -107,17 +107,63 @@ public partial class PersonViewModel
 }
 ```
 
+The generated `RaisePropertyChangedAsync` and `RaisePropertyChangingAsync` are generic over the value
+type, and the compiler infers it from the two values. A call that passes `null` or `default` for both
+values gives it nothing to infer from, so it needs an explicit type argument:
+`RaisePropertyChangedAsync<string?>(nameof(FullName), null, null, ct)`. The same holds for two values
+of different types, such as an `int` and a `string`: write `RaisePropertyChangedAsync<object?>(...)`.
+
+## Reading Old and New Values
+
+`args.OldValue` and `args.NewValue` are `PropertyValue`s. Read them with the property's type:
+
+```csharp
+vm.PropertyChangedAsync += (args, ct) =>
+{
+    if (args.PropertyName == nameof(PersonViewModel.Age))
+    {
+        int age = args.NewValue.As<int>();               // throws InvalidCastException for another type
+        if (args.OldValue.TryGet<int>(out var previous))  // returns false for another type
+            Console.WriteLine($"Age {previous} -> {age}");
+    }
+    return ValueTask.CompletedTask;
+};
+```
+
+Read the value as the property's declared type; that does not box. A value reads as the types its
+boxed form would match, whether it is stored inline or boxed: an `int` property does not read as
+`long`, but a non-null `int?` reads as `int` and an `int` as `int?`, the same as `Guid?` and `Guid`.
+Reading an inline value as any other type than its own, such as `object`, an interface or the other
+side of a nullable, boxes it, and so does `ToObject()`. A `null` old or new value reads
+as `null` for every reference type and nullable value type.
+
+`PropertyValue` implements `IFormattable` and `ISpanFormattable` and hands the format string and
+the format provider on to the value, so `$"{args.NewValue:N2}"`,
+`string.Create(CultureInfo.InvariantCulture, $"{args.NewValue}")` and
+`string.Format(provider, "{0:yyyy-MM-dd}", args.NewValue)` format the value as they would format it
+directly. A `null` formats as an empty string. Formatting does not box a type that implements its own
+formatting, such as `int`, `decimal`, `Guid` or `DateTime`. An enum, a struct that inherits
+`ToString()`, and on .NET 10 a nullable that is stored inline, such as `int?`, are boxed for the
+call.
+
+Some code that compared the old `object?` values still compiles but no longer compares the value:
+`object? x = args.NewValue`, `Assert.Equal(raw, args.NewValue)`, `args.NewValue.Equals(raw)` and
+`object.Equals(args.NewValue, raw)` all box or compare the `PropertyValue` itself, so a comparison
+with the raw value is always false. Read the value instead: `args.NewValue.As<T>() == raw`, or
+`Assert.Equal(raw, args.NewValue.As<T>())`.
+
 ## Property Changed Events
 
 Subscribe to changes for a specific property:
 
 ```csharp
-await vm.PropertyChangedAsync += async (args, ct) =>
+vm.PropertyChangedAsync += (args, ct) =>
 {
     if (args.PropertyName == nameof(PersonViewModel.FirstName))
     {
         Console.WriteLine($"First name: {args.OldValue} → {args.NewValue}");
     }
+    return ValueTask.CompletedTask;
 };
 ```
 
@@ -189,7 +235,7 @@ public partial class ContentViewModel
 
 ## Performance Characteristics
 
-- **Allocation**: 0 B when nobody subscribes. With subscribers, each raised event allocates its 40 B args object, plus a 24 B box each for the old and new value of a value-type property
+- **Allocation**: for a reference-type property, or a value type of up to 16 bytes without references such as `int` or `Guid`, 0 B with or without subscribers when the handlers complete synchronously: the args are structs, and such a value type is held inline instead of boxed. A larger struct, or one that contains references, is boxed once per value
 - **Dispatch**: Direct static method call, no virtual dispatch
 - **Speed**: with five handlers, a change takes about 1.5 times as long as a hand-written `INotifyPropertyChanged`
 

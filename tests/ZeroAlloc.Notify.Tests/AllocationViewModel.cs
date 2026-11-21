@@ -19,10 +19,10 @@ public partial class AllocationViewModel
     [InvokeSequentially]
     private int _sequentialCount;
 
-    public ValueTask RaiseChanged(string propertyName, object? oldValue, object? newValue)
+    public ValueTask RaiseChanged<T>(string propertyName, T oldValue, T newValue)
         => RaisePropertyChangedAsync(propertyName, oldValue, newValue);
 
-    public ValueTask RaiseChanging(string propertyName, object? oldValue, object? newValue)
+    public ValueTask RaiseChanging<T>(string propertyName, T oldValue, T newValue)
         => RaisePropertyChangingAsync(propertyName, oldValue, newValue);
 
     public ValueTask RaiseErrors(string? propertyName) => RaiseErrorsChangedAsync(propertyName);

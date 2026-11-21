@@ -86,7 +86,6 @@ jobs:
       solution: ZeroAlloc.Notify.slnx
       # Runtimes the tests target, besides the SDK that global.json pins.
       dotnet-version: |
-        9.0.x
         10.0.x
         11.0.x
       # nuget.org, plus the GitHub release, as before the shared workflow.
@@ -136,9 +135,7 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
-          dotnet-version: |
-            8.0.x
-            10.0.x
+          dotnet-version: 10.0.x
 
       - name: Build the release tag
         run: dotnet build ZeroAlloc.Notify.slnx --configuration Release -p:Version=${{ needs.release-please.outputs.version }}

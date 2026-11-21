@@ -118,7 +118,7 @@ var entry = new Catalog.Entry<int>();
 var entryChanged = 0;
 entry.PropertyChangedAsync += (args, ct) =>
 {
-    if (string.Equals(args.PropertyName, "Value", StringComparison.Ordinal) && args.NewValue is 7)
+    if (string.Equals(args.PropertyName, "Value", StringComparison.Ordinal) && args.NewValue.TryGet<int>(out var value) && value == 7)
         Interlocked.Increment(ref entryChanged);
     return ValueTask.CompletedTask;
 };
@@ -130,9 +130,9 @@ Console.WriteLine("AOT smoke: PASS");
 return 0;
 
 // Checks that exactly expectedCount events of each kind have been raised, and that the
-// last of each names the property and carries the expected boxed old and new values,
-// matching both runtime type and value. A boxed Nullable<T> must box to its underlying
-// T, or to null when empty.
+// last of each names the property and carries the expected old and new values, matching
+// both runtime type and value once boxed by PropertyValue.ToObject. A boxed Nullable<T>
+// must box to its underlying T, or to null when empty.
 static string? Raised(
     List<AsyncPropertyChangingEventArgs> changing,
     List<AsyncPropertyChangedEventArgs> changed,
@@ -162,9 +162,11 @@ static string? Mismatch(
     object? expectedOld,
     object? expectedNew,
     string actualName,
-    object? actualOld,
-    object? actualNew)
+    PropertyValue actualOldValue,
+    PropertyValue actualNewValue)
 {
+    var actualOld = actualOldValue.ToObject();
+    var actualNew = actualNewValue.ToObject();
     if (!string.Equals(actualName, propertyName, StringComparison.Ordinal))
         return $"{eventName}: expected property {propertyName}, got {actualName}";
     if (!SameBoxed(expectedOld, actualOld))

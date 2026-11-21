@@ -105,7 +105,7 @@ var vm = new FormViewModel();
 vm.PropertyChangedAsync += async (args, ct) =>
 {
     if (args.PropertyName == nameof(vm.Email))
-        await vm.ValidateEmailAsync((string)args.NewValue!, ct);
+        await vm.ValidateEmailAsync(args.NewValue.As<string>()!, ct);
 };
 
 await vm.SetEmailAsync("not-an-email");
@@ -178,8 +178,8 @@ public static partial class Orders
 await new Orders.Entry<int>().SetValueAsync(7);
 ```
 
-A nested class in a containing type that is not `partial` gets the warning
-[ZAN001](diagnostics.md#zan001) and nothing is generated for it.
+A nested class in a containing type that is not `partial` gets the error
+[ZAN001](diagnostics.md#zan001), and nothing is generated for it.
 
 ## Next Steps
 

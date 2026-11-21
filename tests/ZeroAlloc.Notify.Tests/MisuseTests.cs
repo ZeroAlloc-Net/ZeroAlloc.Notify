@@ -5,9 +5,9 @@ using Microsoft.CodeAnalysis;
 namespace ZeroAlloc.Notify.Tests;
 
 /// <summary>
-/// Attribute uses the generator cannot act on. Nothing is generated for them, and each gets a
-/// warning that points at the cause, so the mistake does not first show up as a missing member
-/// at a call site. The project still builds when nothing uses the missing members.
+/// Attribute uses the generator cannot act on. Nothing is generated for them, and each gets an
+/// error that points at the cause, so the mistake fails the build where it is made instead of
+/// passing silently or first showing up as a missing member at a call site.
 /// </summary>
 public class MisuseTests
 {
@@ -31,7 +31,7 @@ public class MisuseTests
         Assert.Equal(new[] { "N.Other.Notify.g.cs" }, result.HintNames);
         var diagnostic = Assert.Single(result.GeneratorDiagnostics);
         Assert.Equal("ZAN004", diagnostic.Id);
-        Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
         Assert.Equal(
             "The notification members of class 'N.Vm' are not generated because it is not partial",
             diagnostic.GetMessage(CultureInfo.InvariantCulture));
@@ -80,7 +80,7 @@ public class MisuseTests
         Assert.Equal(new[] { "N.Other.Notify.g.cs" }, result.HintNames);
         var diagnostic = Assert.Single(result.GeneratorDiagnostics);
         Assert.Equal("ZAN005", diagnostic.Id);
-        Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
         Assert.Equal(
             "The notification members of record 'N.Vm' are not generated because Notify attributes are not supported on records",
             diagnostic.GetMessage(CultureInfo.InvariantCulture));
@@ -106,7 +106,7 @@ public class MisuseTests
         Assert.Empty(result.GeneratedSources);
         Assert.Equal(new[] { "ZAN006", "ZAN006" }, result.GeneratorDiagnostics.Select(d => d.Id), System.StringComparer.Ordinal);
         var diagnostic = result.GeneratorDiagnostics.OrderBy(d => d.Location.SourceSpan.Start).First();
-        Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
         Assert.Equal(
             "No property is generated for field '_count' because its class 'N.Vm' has no Notify attribute such as [NotifyPropertyChangedAsync]",
             diagnostic.GetMessage(CultureInfo.InvariantCulture));
@@ -137,10 +137,10 @@ public class MisuseTests
     }
 
     [Theory]
-    // The class's own warning covers its fields.
+    // The class's own error covers its fields.
     [InlineData("[NotifyPropertyChangedAsync] public class Vm { [ObservableProperty] private int _count; }", "ZAN004")]
     [InlineData("[NotifyPropertyChangedAsync] public partial record Vm { [ObservableProperty] private int _count; }", "ZAN005")]
-    public void ObservablePropertyInAClassWithAWarning_ReportsOnlyTheClassWarning(string declaration, string id)
+    public void ObservablePropertyInAClassWithAnError_ReportsOnlyTheClassError(string declaration, string id)
     {
         var result = GeneratorRunner.Run(Header + declaration);
 
@@ -166,7 +166,7 @@ public class MisuseTests
     }
 
     [Fact]
-    public void Warnings_AreSourceLocations_SoPragmasApply()
+    public void Diagnostics_AreSourceLocations_SoPragmasApply()
     {
         var result = GeneratorRunner.Run(Header + """
             [NotifyPropertyChangedAsync] public class A { }

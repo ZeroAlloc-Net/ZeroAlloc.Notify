@@ -17,6 +17,8 @@ The source generator is bundled into the package, so this single `PackageReferen
 
 > The standalone `ZeroAlloc.Notify.Generator` package is still published for backwards compatibility with existing direct PackageReferences, but new consumers should reference only `ZeroAlloc.Notify`.
 
+The generator needs the .NET 10 SDK 10.0.100 or later, or Visual Studio 2026 or later. It is built against Roslyn 5.0, and an older compiler skips it with warning CS9057, after which the generated code is missing. Version 2.0.0 was built against Roslyn 5.12 and loads only in the .NET 11 SDK; on .NET 10, use 2.0.1 or later. `ZeroAlloc.Notify` also depends on `ZeroAlloc.AsyncEvents`, whose own generator currently needs SDK 10.0.4xx; an older .NET 10 SDK reports CS9057 for that generator only, and the generated Notify code is unaffected (tracked in ZeroAlloc-Net/.github#77).
+
 ## Your First Observable Property
 
 ### 1. Define a ViewModel

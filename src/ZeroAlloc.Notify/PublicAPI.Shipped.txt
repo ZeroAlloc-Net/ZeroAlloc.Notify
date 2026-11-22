@@ -1,4 +1,8 @@
 #nullable enable
+override ZeroAlloc.Notify.PropertyValue.ToString() -> string!
+static ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.Create<T>(string! propertyName, T oldValue, T newValue) -> ZeroAlloc.Notify.AsyncPropertyChangedEventArgs
+static ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.Create<T>(string! propertyName, T oldValue, T newValue) -> ZeroAlloc.Notify.AsyncPropertyChangingEventArgs
+static ZeroAlloc.Notify.PropertyValue.From<T>(T value) -> ZeroAlloc.Notify.PropertyValue
 ZeroAlloc.Notify.AsyncCollectionChangedEventArgs
 ZeroAlloc.Notify.AsyncCollectionChangedEventArgs.Action.get -> System.Collections.Specialized.NotifyCollectionChangedAction
 ZeroAlloc.Notify.AsyncCollectionChangedEventArgs.AsyncCollectionChangedEventArgs(System.Collections.Specialized.NotifyCollectionChangedAction action, System.Collections.IList? newItems, System.Collections.IList? oldItems, int newStartingIndex, int oldStartingIndex) -> void
@@ -9,6 +13,18 @@ ZeroAlloc.Notify.AsyncCollectionChangedEventArgs.OldStartingIndex.get -> int
 ZeroAlloc.Notify.AsyncErrorsChangedEventArgs
 ZeroAlloc.Notify.AsyncErrorsChangedEventArgs.AsyncErrorsChangedEventArgs(string? propertyName) -> void
 ZeroAlloc.Notify.AsyncErrorsChangedEventArgs.PropertyName.get -> string?
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.AsyncPropertyChangedEventArgs() -> void
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.AsyncPropertyChangedEventArgs(string! propertyName, ZeroAlloc.Notify.PropertyValue oldValue, ZeroAlloc.Notify.PropertyValue newValue) -> void
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.NewValue.get -> ZeroAlloc.Notify.PropertyValue
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.OldValue.get -> ZeroAlloc.Notify.PropertyValue
+ZeroAlloc.Notify.AsyncPropertyChangedEventArgs.PropertyName.get -> string!
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.AsyncPropertyChangingEventArgs() -> void
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.AsyncPropertyChangingEventArgs(string! propertyName, ZeroAlloc.Notify.PropertyValue oldValue, ZeroAlloc.Notify.PropertyValue newValue) -> void
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.NewValue.get -> ZeroAlloc.Notify.PropertyValue
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.OldValue.get -> ZeroAlloc.Notify.PropertyValue
+ZeroAlloc.Notify.AsyncPropertyChangingEventArgs.PropertyName.get -> string!
 ZeroAlloc.Notify.INotifyCollectionChangedAsync
 ZeroAlloc.Notify.INotifyCollectionChangedAsync.CollectionChangedAsync -> ZeroAlloc.AsyncEvents.AsyncEvent<ZeroAlloc.Notify.AsyncCollectionChangedEventArgs!>!
 ZeroAlloc.Notify.INotifyDataErrorInfoAsync
@@ -16,7 +32,9 @@ ZeroAlloc.Notify.INotifyDataErrorInfoAsync.ErrorsChangedAsync -> ZeroAlloc.Async
 ZeroAlloc.Notify.INotifyDataErrorInfoAsync.GetErrors(string? propertyName) -> System.Collections.IEnumerable!
 ZeroAlloc.Notify.INotifyDataErrorInfoAsync.HasErrors.get -> bool
 ZeroAlloc.Notify.INotifyPropertyChangedAsync
+ZeroAlloc.Notify.INotifyPropertyChangedAsync.PropertyChangedAsync -> ZeroAlloc.AsyncEvents.AsyncEvent<ZeroAlloc.Notify.AsyncPropertyChangedEventArgs>!
 ZeroAlloc.Notify.INotifyPropertyChangingAsync
+ZeroAlloc.Notify.INotifyPropertyChangingAsync.PropertyChangingAsync -> ZeroAlloc.AsyncEvents.AsyncEvent<ZeroAlloc.Notify.AsyncPropertyChangingEventArgs>!
 ZeroAlloc.Notify.InvokeSequentiallyAttribute
 ZeroAlloc.Notify.InvokeSequentiallyAttribute.InvokeSequentiallyAttribute() -> void
 ZeroAlloc.Notify.NotifyCollectionChangedAsyncAttribute
@@ -29,3 +47,10 @@ ZeroAlloc.Notify.NotifyPropertyChangingAsyncAttribute
 ZeroAlloc.Notify.NotifyPropertyChangingAsyncAttribute.NotifyPropertyChangingAsyncAttribute() -> void
 ZeroAlloc.Notify.ObservablePropertyAttribute
 ZeroAlloc.Notify.ObservablePropertyAttribute.ObservablePropertyAttribute() -> void
+ZeroAlloc.Notify.PropertyValue
+ZeroAlloc.Notify.PropertyValue.As<T>() -> T?
+ZeroAlloc.Notify.PropertyValue.PropertyValue() -> void
+ZeroAlloc.Notify.PropertyValue.ToObject() -> object?
+ZeroAlloc.Notify.PropertyValue.ToString(string? format, System.IFormatProvider? formatProvider) -> string!
+ZeroAlloc.Notify.PropertyValue.TryFormat(System.Span<char> destination, out int charsWritten, System.ReadOnlySpan<char> format, System.IFormatProvider? provider) -> bool
+ZeroAlloc.Notify.PropertyValue.TryGet<T>(out T? value) -> bool

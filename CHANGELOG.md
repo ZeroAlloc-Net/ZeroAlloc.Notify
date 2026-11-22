@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.0.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.3.1...v2.0.0) (2026-11-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* netstandard2.0 and net8.0 assets are no longer shipped; AsyncPropertyChangedEventArgs and AsyncPropertyChangingEventArgs are readonly structs whose OldValue and NewValue are PropertyValue instead of object, read with As<T> or TryGet<T>; the generated RaisePropertyChangedAsync and RaisePropertyChangingAsync are generic over the value type; ZAN001, ZAN004, ZAN005 and ZAN006 are errors instead of warnings. See the Behaviour change section of the release notes for the migration steps.
+
+### Features
+
+* format a PropertyValue with the format string and provider of the caller ([1e968a0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/1e968a083e881873d3817ed8c0158a3afb21ffce))
+* make the property event args allocation-free with readonly struct args and PropertyValue ([1e968a0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/1e968a083e881873d3817ed8c0158a3afb21ffce))
+* target net10.0 and net11.0, drop netstandard2.0 and net8.0 ([1e968a0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/1e968a083e881873d3817ed8c0158a3afb21ffce))
+
+
+### Bug Fixes
+
+* report ZAN001 as an error when a containing type of a Notify class is not partial ([1e968a0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/1e968a083e881873d3817ed8c0158a3afb21ffce))
+* report ZAN004 as an error when a Notify class is not partial ([1e968a0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/1e968a083e881873d3817ed8c0158a3afb21ffce))
+* report ZAN005 as an error when a Notify attribute is on a record ([1e968a0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/1e968a083e881873d3817ed8c0158a3afb21ffce))
+* report ZAN006 as an error for an ObservableProperty field in a class without a Notify attribute ([1e968a0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/1e968a083e881873d3817ed8c0158a3afb21ffce))
+
 ## [1.3.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v1.3.0...v1.3.1) (2026-11-16)
 
 

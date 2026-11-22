@@ -20,7 +20,7 @@
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="true" />
     <ProjectReference Include="..\..\src\ZeroAlloc.Notify\ZeroAlloc.Notify.csproj" />
-    <PackageReference Include="ZeroAlloc.AsyncEvents" Version="1.2.1" />
+    <PackageReference Include="ZeroAlloc.AsyncEvents" Version="1.2.2" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

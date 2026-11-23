@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v2.0.1...v2.0.2) (2026-11-23)
+
+
+### Bug Fixes
+
+* depend on ZeroAlloc.AsyncEvents 1.2.2, which loads on SDK 10.0.1xx ([#333](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/issues/333)) ([8e092ed](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/commit/8e092ed69d5ea702b03764d93a6eb678f4cf5ec4))
+
 ## [2.0.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Notify/compare/v2.0.0...v2.0.1) (2026-11-22)
 
 
